@@ -6,14 +6,15 @@ using System.Linq;
 using Godot;
 public partial class GameManager : Node3D
 {
-    [Export] public PackedScene PlayerScene = ResourceLoader.Load<PackedScene>("res://src/Player.tscn");
-    [Export] public PackedScene EnemyScene = ResourceLoader.Load<PackedScene>("res://src/Enemy.tscn");
+    [Export] public PackedScene PlayerScene = ResourceLoader.Load<PackedScene>("res://src/Components/Units/Player/Player.tscn");
+    [Export] public PackedScene EnemyScene = ResourceLoader.Load<PackedScene>("res://src/Components/Units/Enemies/Enemy.tscn");
 
     private HexGrid _grid;
     private PathFinder _pathFinder;
     private TurnManager _turnManager;
     private Player _player;
     private List<Enemy> _enemies = new();
+    private StateManager _stateManager;
 
     public override void _Ready()
     {
@@ -35,11 +36,13 @@ public partial class GameManager : Node3D
 
         // Start combat
         _turnManager.StartCombat(_player, _enemies);
+        _stateManager = new StateManager(this);
     }
 
     private void OnTileClicked(HexTile tile)
     {
-        if (!_turnManager.IsUnitTurn(_player)) return;
+        if (!_stateManager.CanProcessInput()) return;
+        // if (!_turnManager.IsUnitTurn(_player)) return;
 
         var targetHex = _grid.WorldToHex(tile.Position);
         var currentPos = _grid.WorldToHex(_player.Position);
@@ -86,6 +89,7 @@ public partial class GameManager : Node3D
             }
 
             _turnManager.EndTurn();
+
         }
     }
     private void OnTurnChanged(Unit unit)
@@ -104,7 +108,7 @@ public partial class GameManager : Node3D
         };
     }
 
-    private void ProcessEnemyTurn(Enemy enemy)
+    public void ProcessEnemyTurn(Enemy enemy)
     {
         var playerPos = _grid.WorldToHex(_player.Position);
         var currentEnemyPos = _grid.WorldToHex(enemy.Position);
@@ -117,32 +121,32 @@ public partial class GameManager : Node3D
         }
     }
 
-    private void GameOver()
+    public void GameOver()
     {
         GD.Print("Game Over - Player Died!");
         // Add any game over logic here
     }
 
-    private void Victory()
+    public void Victory()
     {
         GD.Print("KILL EM ALL!");
         // Add any game over logic here
     }
 
-    private void MovePlayer(Vector3I hexCoord)
+    public void MovePlayer(Vector3I hexCoord)
     {
         var worldPos = _grid.HexToWorld(hexCoord);
         _player.Position = worldPos;
     }
 
-    private void SpawnPlayer(Vector3I hexCoord)
+    public void SpawnPlayer(Vector3I hexCoord)
     {
         _player = PlayerScene.Instantiate<Player>();
         AddChild(_player);
         _player.Position = _grid.HexToWorld(hexCoord);
     }
 
-    private void SpawnEnemy(Vector3I hexCoord)
+    public void SpawnEnemy(Vector3I hexCoord)
     {
         var enemy = EnemyScene.Instantiate<Enemy>();
         AddChild(enemy);

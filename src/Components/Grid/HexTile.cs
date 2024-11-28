@@ -3,7 +3,6 @@ using Godot;
 
 public partial class HexTile : Node3D
 {
-
 	[Export] public MeshInstance3D Mesh { get; set; }
 
 	private StandardMaterial3D _defaultMaterial;

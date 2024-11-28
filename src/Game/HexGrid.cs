@@ -29,7 +29,7 @@ public partial class HexGrid
 
     private void GenerateHexagonalGrid(int radius)
     {
-        PackedScene hexTileScene = ResourceLoader.Load<PackedScene>("res://src/HexTile.tscn");
+        PackedScene hexTileScene = ResourceLoader.Load<PackedScene>("res://src/Components/Grid/HexTile.tscn");
         var coordinates = GenerateHexCoordinates(radius);
 
         foreach (var coord in coordinates)

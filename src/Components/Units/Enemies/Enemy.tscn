@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://c17xxj8sijf0w"]
 
-[ext_resource type="Script" path="res://src/Enemy.cs" id="1_xmk32"]
+[ext_resource type="Script" path="res://src/Components/Units/Enemies/Enemy.cs" id="1_xmk32"]
 [ext_resource type="PackedScene" uid="uid://b30pirv11266s" path="res://assets/models/grunt.glb" id="2_4ulvn"]
 
 [node name="Enemy" type="Node3D" groups=["Enemy"]]
