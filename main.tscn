@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://dooip7hir4st8"]
+
+[ext_resource type="Script" path="res://src/GameManager.cs" id="1_j3488"]
+[ext_resource type="Script" path="res://src/Camera3d.cs" id="3_4hapi"]
+
+[node name="Main" type="Node3D"]
+
+[node name="GameManager" type="Node3D" parent="."]
+script = ExtResource("1_j3488")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.965926, -0.166366, 0.198267, 0, 0.766044, 0.642788, -0.258819, -0.620885, 0.739942, 0, 13, 0)
+v_offset = -10.0
+projection = 1
+size = 14.5
+script = ExtResource("3_4hapi")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.993896, -0.0955768, 0.0550994, -0.0221341, 0.316532, 0.948324, -0.108078, -0.943755, 0.312484, 0, 0, 0)
+shadow_enabled = true
