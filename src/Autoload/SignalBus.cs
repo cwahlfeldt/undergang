@@ -1,9 +1,11 @@
+using System;
 using Godot;
+using Undergang.Entities;
 
 public partial class SignalBus : Node
 {
     [Signal] public delegate void TileClickedEventHandler(HexTile tile);
-    [Signal] public delegate void TurnChangedEventHandler(Unit unit);
+    public event Action<Entity> TurnChangedEventHandler;
 
     public static SignalBus Instance { get; private set; }
 

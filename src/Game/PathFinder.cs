@@ -1,8 +1,10 @@
+namespace Undergang.Game;
+
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
-public class PathFinder
+public partial class PathFinder
 {
     private readonly AStar3D _astar;
     private readonly Dictionary<Vector3I, HexTile> _tiles;

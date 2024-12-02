@@ -1,12 +1,12 @@
-// HexGrid.cs
+namespace Undergang.Game;
+
 using System.Collections.Generic;
 using Godot;
 
 public partial class HexGrid
 {
     private const float HEX_SIZE = 1.05f;
-    public Dictionary<Vector3I, HexTile> Tiles = new();
-    private int _radius = 5;
+    public Dictionary<Vector3I, HexTile> Tiles = [];
     private Node3D _rootNode;
 
     public static readonly Dictionary<string, Vector3I> Directions = new()
@@ -75,7 +75,7 @@ public partial class HexGrid
         return neighbors.FindAll(hex => Tiles.ContainsKey(hex));
     }
 
-    public Vector3 HexToWorld(Vector3I hexCoord)
+    public static Vector3 HexToWorld(Vector3I hexCoord)
     {
         float x = HEX_SIZE * (1.5f * hexCoord.X);
         float z = HEX_SIZE * (Mathf.Sqrt(3.0f) * (hexCoord.Y + hexCoord.X * 0.5f));

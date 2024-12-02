@@ -1,25 +1,27 @@
+namespace Undergang.Game;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Godot;
+using Undergang.Entities;
 
 public partial class TurnManager
 {
-    private Queue<Node3D> _turnQueue = new();
-    public Node3D CurrentUnit => _turnQueue.Count > 0 ? _turnQueue.Peek() : null;
+    public event Action<Entity> OnTurnChanged;
+    private Queue<Entity> _turnQueue = new();
+    public Entity CurrentUnit => _turnQueue.Count > 0 ? _turnQueue.Peek() : null;
 
-    public void StartCombat(Player player, List<Enemy> enemies)
+    public void StartCombat(Entity player, List<Entity> enemies)
     {
         _turnQueue.Clear();
 
         // Add all units to queue
         _turnQueue.Enqueue(player);
         foreach (var enemy in enemies)
-        {
             _turnQueue.Enqueue(enemy);
-        }
 
         // Notify first turn
-        SignalBus.Instance.EmitSignal(SignalBus.SignalName.TurnChanged, CurrentUnit);
+        OnTurnChanged?.Invoke(CurrentUnit);
     }
 
     public void EndTurn()
@@ -28,17 +30,17 @@ public partial class TurnManager
         {
             var unit = _turnQueue.Dequeue();
             _turnQueue.Enqueue(unit); // Put at end of queue
-            SignalBus.Instance.EmitSignal(SignalBus.SignalName.TurnChanged, CurrentUnit);
+            OnTurnChanged?.Invoke(CurrentUnit);
         }
     }
 
-    public void RemoveUnit(Node3D unit)
+    public void RemoveUnit(Entity unit)
     {
         // Create new queue without the removed unit
-        _turnQueue = new Queue<Node3D>(_turnQueue.Where(u => u != unit));
+        _turnQueue = new Queue<Entity>(_turnQueue.Where(u => u != unit));
     }
 
-    public bool IsUnitTurn(Node3D unit)
+    public bool IsUnitTurn(Entity unit)
     {
         return CurrentUnit == unit;
     }

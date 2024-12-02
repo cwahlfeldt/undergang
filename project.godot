@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+AnimationManager="*res://src/Autoload/AnimationManager.cs"
 SignalBus="*res://src/Autoload/SignalBus.cs"
 
 [dotnet]
