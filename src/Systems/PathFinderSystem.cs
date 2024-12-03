@@ -70,7 +70,6 @@ namespace Game.Systems
 
         public List<Vector3I> FindPath(Vector3I from, Vector3I to, int maxRange)
         {
-
             if (!_tiles.TryGetValue(from, out var fromTile) || !_tiles.TryGetValue(to, out var toTile))
                 return [];
 

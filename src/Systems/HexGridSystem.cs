@@ -74,7 +74,7 @@ namespace Game.Systems
                 };
             }
 
-            
+
             tileNode.Name = $"Tile {hexCoord} {index}";
             tileNode.Position = HexToWorld(hexCoord);
             tileEntity.Add(new RenderComponent(tileNode));
@@ -123,11 +123,11 @@ namespace Game.Systems
                 }
             }
             coords.Sort((a, b) =>
-            {
-                if (a.Y != b.Y)
-                    return b.Y.CompareTo(a.Y);
-                return b.X.CompareTo(a.X);
-            });
+        {
+            if (a.Y != b.Y)
+                return a.Y.CompareTo(b.Y);  // Changed to ascending Y
+            return a.X.CompareTo(b.X);      // Changed to ascending X
+        });
             return coords;
         }
 

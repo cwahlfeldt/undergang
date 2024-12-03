@@ -1,6 +1,8 @@
 using Godot;
 using Game.Autoload;
 using Game.Systems;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace Game
 {
@@ -26,7 +28,7 @@ namespace Game
             _turnSystem = new TurnSystem(_entityManager);
 
             var player = _unitSystem.CreatePlayer(new Vector3I(0, 4, -4));
-            _unitSystem.CreateGrunt(new Vector3I(-2, 1, 3));
+            _unitSystem.CreateGrunt(new Vector3I(-1, 0, 1));
             _unitSystem.CreateGrunt(new Vector3I(2, -3, 1));
 
             _turnSystem.OnTurnChanged += OnTurnChanged;
@@ -41,54 +43,64 @@ namespace Game
             var player = _entityManager.GetPlayer();
             var playerMoveRange = player.Get<MoveRangeComponent>().MoveRange;
             var tileCoord = tile.Get<HexCoordComponent>().HexCoord;
-            // GD.Print(tileCoord);
-
             var targetHex = _hexGridSystem.WorldToHex(tileCoord);
             var currentPos = player.Get<HexCoordComponent>().HexCoord;
             var path = _pathFinderSystem.FindPath(currentPos, tileCoord, playerMoveRange);
-            // GD.Print(path.ToString());
 
             if (path.Count > 0)
             {
-                // Move player
+                var movePos = path[playerMoveRange];
+                var enemies = _entityManager.GetEnemies();
+
                 await _animationSystem.MoveEntity(player, path);
 
-                // Check if player would die from this move
-                // if (_combatSystem.WouldDieFromMove(player, currentPos, targetHex))
-                // {
-                //     _turnSystem.RemoveUnit(player);
-                //     _entityManager.RemoveEntity(player);
-                //     GameOver();
-                //     return;
-                // }
+                // Check if this move would kill the player
+                foreach (var enemy in enemies)
+                {
+                    var enemyPos = enemy.Get<HexCoordComponent>().HexCoord;
+                    bool wasAdjacent = _hexGridSystem.GetDistance(currentPos, enemyPos) == 1;
+                    bool willBeAdjacent = _hexGridSystem.GetDistance(movePos, enemyPos) == 1;
 
-                // Check for killed enemies
-                // var killedEnemies = _combatSystem.GetKillableEnemies(player, currentPos, targetHex);
-                // foreach (var enemy in killedEnemies)
-                // {
-                //     _turnSystem.RemoveUnit(enemy);
-                //     _entityManager.RemoveEntity(enemy);
-                // }
+                    // If we're moving adjacent to an enemy from a non-adjacent position, player dies
+                    if (!wasAdjacent && willBeAdjacent)
+                    {
+                        _turnSystem.RemoveUnit(player);
+                        _entityManager.RemoveEntity(player);
+                        GameOver();
+                        return;
+                    }
+                }
 
-                if (_entityManager.GetEnemies().Count == 0)
+                // If we're still alive, check for enemy kills
+                var killedEnemies = enemies.Where(enemy =>
+                    _hexGridSystem.GetDistance(movePos, enemy.Get<HexCoordComponent>().HexCoord) == 1);
+
+                foreach (var enemy in killedEnemies)
+                {
+                    _turnSystem.RemoveUnit(enemy);
+                    _entityManager.RemoveEntity(enemy);
+                }
+
+                if (enemies.Count == 0)
                 {
                     Victory();
                     return;
                 }
 
                 _turnSystem.EndTurn();
+
             }
         }
 
-        private void OnTurnChanged(Entity unit)
+        private async void OnTurnChanged(Entity unit)
         {
             if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Grunt)
             {
-                ProcessEnemyTurn(unit);
+                await ProcessEnemyTurn(unit);
             }
         }
 
-        public async void ProcessEnemyTurn(Entity enemy)
+        public async Task ProcessEnemyTurn(Entity enemy)
         {
             var player = _entityManager.GetPlayer();
             var playerPos = player.Get<HexCoordComponent>().HexCoord;
@@ -101,8 +113,10 @@ namespace Game
             {
 
                 await _animationSystem.MoveEntity(enemy, path);
-                _turnSystem.EndTurn();
+
             }
+
+            _turnSystem.EndTurn();
         }
 
         public void GameOver()
