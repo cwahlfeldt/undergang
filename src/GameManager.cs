@@ -14,6 +14,7 @@ namespace Game
         private UnitSystem _unitSystem;
         private TurnSystem _turnSystem;
         private AnimationSystem _animationSystem;
+        private InputSystem _inputSystem;
         private DebugSystem _debugSystem;
         private bool _playerActionInProgress = false;
 
@@ -26,6 +27,7 @@ namespace Game
             _animationSystem = new AnimationSystem();
             _turnSystem = new TurnSystem(_entityManager);
             _debugSystem = new DebugSystem(_entityManager);
+            // _inputSystem = new InputSystem(_entityManager, _hexGridSystem);
 
             var player = _unitSystem.CreatePlayer(new Vector3I(0, 4, -4));
             _unitSystem.CreateGrunt(new Vector3I(-1, 0, 1));

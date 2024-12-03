@@ -75,7 +75,19 @@ namespace Game.Systems
                         EventBus.Instance.OnTileSelect(tileEntity);
                     }
                 };
+
+                tileBody.MouseEntered += () =>
+                {
+                    EventBus.Instance.OnTileHover(tileEntity);
+                };
+
+                tileBody.MouseExited += () =>
+                {
+                    EventBus.Instance.OnTileUnhover(tileEntity);
+                };
             }
+
+
 
             if (tileType == TileType.Blocked)
             {

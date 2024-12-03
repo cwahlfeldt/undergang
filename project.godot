@@ -22,7 +22,7 @@ AnimationManager="*res://src/Autoload/AnimationManager.cs"
 
 [dotnet]
 
-project/assembly_name="Hoplite Clone"
+project/assembly_name="Undergang"
 
 [rendering]
 
