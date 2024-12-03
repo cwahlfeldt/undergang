@@ -1,15 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Game.Autoload;
 
-namespace Undergang.Entities.Systems
+namespace Game.Systems
 {
     public class HexGridSystem
     {
         private const float HEX_SIZE = 1.05f;
         private readonly EntityManager _entityManager;
         private Node3D _hexGridContainer;
-        private readonly PackedScene _hexTileScene = ResourceLoader.Load<PackedScene>("res://src/Components/Grid/HexTile.tscn");
+        private readonly PackedScene _hexTileScene = ResourceLoader.Load<PackedScene>("res://src/Scenes/HexTile.tscn");
 
         public HexGridSystem(EntityManager entityManager, int radius)
         {
@@ -55,20 +56,41 @@ namespace Undergang.Entities.Systems
         private void CreateTileEntity(Vector3I hexCoord)
         {
             var tileEntity = new Entity(_entityManager.GetNextId());
-
-            // Initialize components
-            tileEntity.Add(new NameComponent($"Tile_{hexCoord}"));
-            tileEntity.Add(new HexTileComponent(TileType.Floor));
-            tileEntity.Add(new HexCoordComponent(hexCoord));
-
-            // Create visual representation
             var tileNode = _hexTileScene.Instantiate<Node3D>();
+
+            if (tileNode is StaticBody3D tileBody)
+            {
+                tileBody.InputEvent += (camera, @event, position, normal, shapeIdx) =>
+                {
+                    if (@event is InputEventMouseButton mouseEvent &&
+                        mouseEvent.ButtonIndex == MouseButton.Left &&
+                        mouseEvent.Pressed)
+                    {
+                        EventBus.Instance.OnTileSelect(tileEntity);
+                    }
+                };
+            }
+
             _hexGridContainer.AddChild(tileNode);
             tileNode.Position = HexToWorld(hexCoord);
             tileEntity.Add(new RenderComponent(tileNode));
+            tileEntity.Add(new HexCoordComponent(hexCoord));
+            tileEntity.Add(new HexTileComponent(TileType.Floor));
+            tileEntity.Add(new NameComponent($"Tile_{hexCoord}"));
 
             _entityManager.AddEntity(tileEntity);
         }
+
+        // public void OnInputEvent(Node camera, InputEvent @event, Vector3 position, Vector3 normal, int shapeIdx)
+        // {
+        //     if (@event is InputEventMouseButton mouseEvent)
+        //     {
+        //         if (mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+        //         {
+        //             EventBus.Instance.OnTileSelect(mouseEvent);
+        //         }
+        //     }
+        // }
 
         public List<Entity> GetNeighborTiles(Vector3I center)
         {

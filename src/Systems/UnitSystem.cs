@@ -1,7 +1,6 @@
 using Godot;
-using Undergang.Game;
 
-namespace Undergang.Entities.Systems
+namespace Game.Systems
 {
     public class UnitSystem(EntityManager entityManager)
     {
@@ -9,7 +8,7 @@ namespace Undergang.Entities.Systems
         
         public Entity CreatePlayer(Vector3I hexCoord)
         {
-            var scene = ResourceLoader.Load<PackedScene>("res://src/Components/Units/Player/Player.tscn");
+            var scene = ResourceLoader.Load<PackedScene>("res://src/Scenes/Player.tscn");
             var entity = CreateUnit(UnitType.Player, hexCoord, scene);
             entity.Update(new HealthComponent(3));
 
@@ -19,7 +18,7 @@ namespace Undergang.Entities.Systems
 
         public Entity CreateGrunt(Vector3I hexCoord)
         {
-            var scene = ResourceLoader.Load<PackedScene>("res://src/Components/Units/Enemies/Enemy.tscn");
+            var scene = ResourceLoader.Load<PackedScene>("res://src/Scenes/Enemy.tscn");
             var entity = CreateUnit(UnitType.Grunt, hexCoord, scene);
 
             _entityManager.AddEntity(entity);
@@ -40,7 +39,7 @@ namespace Undergang.Entities.Systems
 
             var unit = unitScene.Instantiate<Node3D>();
             _entityManager.GetRootNode().AddChild(unit);
-            unit.Position = HexGrid.HexToWorld(hexCoord);
+            unit.Position = HexGridSystem.HexToWorld(hexCoord);
 
             entity.Add(new RenderComponent(unit));
             entity.Get<RenderComponent>().Node3D.Name = name;

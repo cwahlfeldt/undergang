@@ -1,9 +1,8 @@
 using Godot;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Undergang.Autoload
+namespace Game.Autoload
 {
     public partial class AnimationManager : Node
     {

@@ -1,4 +1,4 @@
-namespace Undergang.Entities;
+namespace Game;
 
 using Godot;
 
@@ -14,3 +14,4 @@ public record HealthComponent(int Health);
 public record HexTileComponent(TileType Type);
 public record RenderComponent(Node3D Node3D);
 public record HexGridComponent(int Radius);
+public record InputReciever();
