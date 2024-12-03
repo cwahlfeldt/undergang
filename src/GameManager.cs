@@ -13,9 +13,9 @@ namespace Game
         private PathFinderSystem _pathFinderSystem;
         private UnitSystem _unitSystem;
         private TurnSystem _turnSystem;
-        // private CombatSystem _combatSystem;
         private AnimationSystem _animationSystem;
         private DebugSystem _debugSystem;
+        private bool _playerActionInProgress = false;
 
         public override void _Ready()
         {
@@ -23,7 +23,6 @@ namespace Game
             _hexGridSystem = new HexGridSystem(_entityManager, 5);
             _pathFinderSystem = new PathFinderSystem(_entityManager, _hexGridSystem);
             _unitSystem = new UnitSystem(_entityManager);
-            // _combatSystem = new CombatSystem(_entityManager, _hexGridSystem);
             _animationSystem = new AnimationSystem();
             _turnSystem = new TurnSystem(_entityManager);
 
@@ -40,6 +39,8 @@ namespace Game
 
         private async void OnTileClicked(Entity tile)
         {
+            if (_playerActionInProgress)
+                return;
             var player = _entityManager.GetPlayer();
             var playerMoveRange = player.Get<MoveRangeComponent>().MoveRange;
             var tileCoord = tile.Get<HexCoordComponent>().HexCoord;
@@ -52,7 +53,9 @@ namespace Game
                 var movePos = path[playerMoveRange];
                 var enemies = _entityManager.GetEnemies();
 
+                _playerActionInProgress = true; // Set the flag to true
                 await _animationSystem.MoveEntity(player, path);
+                _playerActionInProgress = false;
 
                 // Check if this move would kill the player
                 foreach (var enemy in enemies)

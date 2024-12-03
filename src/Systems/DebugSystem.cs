@@ -23,6 +23,9 @@ namespace Game.Systems
 
             foreach (var tile in _entityManager.GetHexGrid())
             {
+                if (tile.Get<HexTileComponent>().Type == TileType.Blocked)
+                    continue;
+
                 var hexCoord = tile.Get<HexCoordComponent>().HexCoord;
                 var labelPos = HexGridSystem.HexToWorld(hexCoord);
 

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Game.Autoload;
+using System;
 
 namespace Game.Systems
 {
@@ -28,7 +29,7 @@ namespace Game.Systems
             { "SouthEast", new Vector3I(1, 0, -1) }
         };
 
-        public void CreateHexGrid(int radius)
+        public void CreateHexGrid(int radius, int blockedTilesAmt = 12)
         {
             _hexGridContainer = new Node3D
             {
@@ -43,19 +44,22 @@ namespace Game.Systems
 
             // Generate the coordinates
             var coordinates = GenerateHexCoordinates(radius);
+            var randBlockedTileIndices = GenerateRandomIntArray(blockedTilesAmt);
+            // GD.Print();
 
             // Create tile entities
             var index = 0;
             foreach (var coord in coordinates)
             {
-                CreateTileEntity(coord, index);
+                var tileType = randBlockedTileIndices.Contains(index) ? TileType.Blocked : TileType.Floor;
+                CreateTileEntity(coord, index, tileType);
                 index++;
             }
 
             _entityManager.AddEntity(gridEntity);
         }
 
-        private void CreateTileEntity(Vector3I hexCoord, int index)
+        private void CreateTileEntity(Vector3I hexCoord, int index, TileType tileType)
         {
             var tileEntity = new Entity(_entityManager.GetNextId());
             var tileNode = _hexTileScene.Instantiate<Node3D>();
@@ -74,12 +78,16 @@ namespace Game.Systems
                 };
             }
 
+            if (tileType == TileType.Blocked)
+            {
+                tileNode.GetNode<MeshInstance3D>("Mesh").Visible = false;
+            }
 
             tileNode.Name = $"Tile {hexCoord} {index}";
             tileNode.Position = HexToWorld(hexCoord);
             tileEntity.Add(new RenderComponent(tileNode));
             tileEntity.Add(new HexCoordComponent(hexCoord));
-            tileEntity.Add(new HexTileComponent(TileType.Floor, index));
+            tileEntity.Add(new HexTileComponent(tileType, index));
             tileEntity.Add(new NameComponent(tileNode.Name));
 
             _entityManager.AddEntity(tileEntity);
@@ -92,7 +100,7 @@ namespace Game.Systems
             {
                 var neighborCoord = center + direction;
                 var neighborTile = GetTileAtCoordinate(neighborCoord);
-                if (neighborTile != null)
+                if (neighborTile != null && neighborTile.Get<HexTileComponent>().Type != TileType.Blocked)
                 {
                     neighbors.Add(neighborTile);
                 }
@@ -122,12 +130,14 @@ namespace Game.Systems
                     coords.Add(new Vector3I(q, r, s));
                 }
             }
+
             coords.Sort((a, b) =>
-        {
-            if (a.Y != b.Y)
-                return a.Y.CompareTo(b.Y);  // Changed to ascending Y
-            return a.X.CompareTo(b.X);      // Changed to ascending X
-        });
+                {
+                    if (a.Y != b.Y)
+                        return a.Y.CompareTo(b.Y);  // Changed to ascending Y
+                    return a.X.CompareTo(b.X);      // Changed to ascending X
+                });
+
             return coords;
         }
 
@@ -171,5 +181,21 @@ namespace Game.Systems
             var diff = a - b;
             return (Mathf.Abs(diff.X) + Mathf.Abs(diff.Y) + Mathf.Abs(diff.Z)) / 2;
         }
+
+        private int[] GenerateRandomIntArray(int size)
+        {
+            Random rand = new();
+            int[] array = new int[size];
+
+            for (int i = 0; i < size; i++)
+            {
+                var randNum = rand.Next(20, 90);
+                GD.Print("" + randNum);
+                array[i] = randNum;
+            }
+
+            return array;
+        }
+
     }
 }
