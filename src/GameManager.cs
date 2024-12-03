@@ -25,22 +25,23 @@ namespace Game
             _unitSystem = new UnitSystem(_entityManager);
             _animationSystem = new AnimationSystem();
             _turnSystem = new TurnSystem(_entityManager);
+            _debugSystem = new DebugSystem(_entityManager);
 
             var player = _unitSystem.CreatePlayer(new Vector3I(0, 4, -4));
             _unitSystem.CreateGrunt(new Vector3I(-1, 0, 1));
             _unitSystem.CreateGrunt(new Vector3I(2, -3, 1));
 
-            _turnSystem.OnTurnChanged += OnTurnChanged;
             _turnSystem.StartCombat();
 
+            EventBus.Instance.TurnChanged += OnTurnChanged;
             EventBus.Instance.TileSelect += OnTileClicked;
-            _debugSystem = new DebugSystem(_entityManager);
         }
 
         private async void OnTileClicked(Entity tile)
         {
             if (_playerActionInProgress)
                 return;
+
             var player = _entityManager.GetPlayer();
             var playerMoveRange = player.Get<MoveRangeComponent>().MoveRange;
             var tileCoord = tile.Get<HexCoordComponent>().HexCoord;
@@ -114,9 +115,7 @@ namespace Game
 
             if (path.Count > 0)
             {
-
                 await _animationSystem.MoveEntity(enemy, path);
-
             }
 
             _turnSystem.EndTurn();

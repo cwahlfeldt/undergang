@@ -5,9 +5,12 @@ namespace Game.Autoload
 {
     public partial class EventBus : Node
     {
-        // [Signal] public delegate void TileClickedEventHandler(HexTile tile);
         public event Action<Entity> TurnChanged;
         public event Action<Entity> TileSelect;
+        public event Action<Entity> TileHover;
+        public event Action<Entity> TileUnhover;
+        public event Action<Entity> UnitHover;
+        public event Action<Entity> UnitUnhover;
 
         public static EventBus Instance { get; private set; }
 
@@ -24,6 +27,26 @@ namespace Game.Autoload
         public void OnTurnChanged(Entity tile)
         {
             TurnChanged?.Invoke(tile);
+        }
+
+        public void OnTileHover(Entity tile)
+        {
+            TileHover?.Invoke(tile);
+        }
+
+        public void OnTileUnhover(Entity tile)
+        {
+            TileUnhover?.Invoke(tile);
+        }
+
+        public void OnUnitHover(Entity tile)
+        {
+            UnitHover?.Invoke(tile);
+        }
+
+        public void OnUnitUnhover(Entity tile)
+        {
+            UnitUnhover?.Invoke(tile);
         }
     }
 }

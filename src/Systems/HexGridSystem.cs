@@ -45,7 +45,6 @@ namespace Game.Systems
             // Generate the coordinates
             var coordinates = GenerateHexCoordinates(radius);
             var randBlockedTileIndices = GenerateRandomIntArray(blockedTilesAmt);
-            // GD.Print();
 
             // Create tile entities
             var index = 0;
@@ -190,7 +189,6 @@ namespace Game.Systems
             for (int i = 0; i < size; i++)
             {
                 var randNum = rand.Next(20, 90);
-                GD.Print("" + randNum);
                 array[i] = randNum;
             }
 

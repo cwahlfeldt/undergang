@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Game.Autoload;
 
 namespace Game.Systems
 {
@@ -8,7 +9,7 @@ namespace Game.Systems
     {
         private Queue<Entity> _turnQueue = new();
         private readonly EntityManager _entityManager = entityManager;
-        public event Action<Entity> OnTurnChanged;
+        // public event Action<Entity> OnTurnChanged;
         public Entity CurrentUnit => _turnQueue.Count > 0 ? _turnQueue.Peek() : null;
 
         public void StartCombat()
@@ -28,7 +29,7 @@ namespace Game.Systems
 
             // Notify first turn
             if (CurrentUnit != null)
-                OnTurnChanged?.Invoke(CurrentUnit);
+                EventBus.Instance.OnTurnChanged(CurrentUnit);
         }
 
         public void EndTurn()
@@ -43,7 +44,7 @@ namespace Game.Systems
 
                 // Notify next turn if there are units left
                 if (CurrentUnit != null)
-                    OnTurnChanged?.Invoke(CurrentUnit);
+                    EventBus.Instance.OnTurnChanged(CurrentUnit);
             }
         }
 
@@ -64,16 +65,5 @@ namespace Game.Systems
         {
             return CurrentUnit?.Id == unit.Id;
         }
-
-        public List<Entity> GetEnemies() =>
-            _entityManager.GetEntities().Values
-                .Where(e => e.Has<UnitTypeComponent>() &&
-                        e.Get<UnitTypeComponent>().UnitType == UnitType.Grunt)
-                .ToList();
-
-        public Entity GetPlayer() =>
-            _entityManager.GetEntities().Values
-                .FirstOrDefault(e => e.Has<UnitTypeComponent>() &&
-                                    e.Get<UnitTypeComponent>().UnitType == UnitType.Player);
     }
 }

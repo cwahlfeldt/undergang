@@ -16,9 +16,7 @@ namespace Game.Systems
                 return;
             }
 
-            // GD.Print("wtf");
             var entityMoveRange = entity.Get<MoveRangeComponent>().MoveRange;
-            // var rangedPath = path.Take(entityMoveRange + 1);
             var entityNode = entity.Get<RenderComponent>().Node3D;
             var locations = path.Select(HexGridSystem.HexToWorld).ToList();
 
