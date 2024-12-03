@@ -10,15 +10,15 @@ config_version=5
 
 [application]
 
-config/name="Hoplite Clone"
-run/main_scene="res://main.tscn"
+config/name="Undergang"
+run/main_scene="res://src/Scenes/Main.tscn"
 config/features=PackedStringArray("4.3", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
+EventBus="*res://src/Autoload/EventBus.cs"
 AnimationManager="*res://src/Autoload/AnimationManager.cs"
-SignalBus="*res://src/Autoload/SignalBus.cs"
 
 [dotnet]
 

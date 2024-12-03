@@ -1,6 +1,4 @@
-[gd_scene load_steps=6 format=4 uid="uid://da6kx4g45r18p"]
-
-[ext_resource type="Script" path="res://src/Components/Grid/HexTile.cs" id="1_lm7mv"]
+[gd_scene load_steps=5 format=4 uid="uid://da6kx4g45r18p"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kb2gj"]
 resource_name = "Material.001"
@@ -45,7 +43,6 @@ height = 0.7
 radius = 0.9
 
 [node name="HexTile" type="Area3D" groups=["Hex"]]
-script = ExtResource("1_lm7mv")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("ArrayMesh_vmrp5")

@@ -87,7 +87,7 @@ namespace Game.Systems
             int toIndex = GetIndexFromCoord(to);
 
             if (!_astar.HasPoint(fromIndex) || !_astar.HasPoint(toIndex))
-                return new List<Vector3I>();
+                return [];
 
             var path = _astar.GetPointPath(fromIndex, toIndex);
             

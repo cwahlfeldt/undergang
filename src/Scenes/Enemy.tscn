@@ -1,11 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://c17xxj8sijf0w"]
+[gd_scene load_steps=2 format=3 uid="uid://c17xxj8sijf0w"]
 
-[ext_resource type="Script" path="res://src/Components/Units/Enemies/Enemy.cs" id="1_xmk32"]
 [ext_resource type="PackedScene" uid="uid://b30pirv11266s" path="res://assets/models/grunt.glb" id="2_4ulvn"]
 
 [node name="Enemy" type="Node3D" groups=["Enemy"]]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
-script = ExtResource("1_xmk32")
 
 [node name="Mesh" parent="." instance=ExtResource("2_4ulvn")]
 transform = Transform3D(0.18, 0, 0, 0, 0.18, 0, 0, 0, 0.18, 0, 0.84, 0)

@@ -57,8 +57,9 @@ namespace Game.Systems
         {
             var tileEntity = new Entity(_entityManager.GetNextId());
             var tileNode = _hexTileScene.Instantiate<Node3D>();
+            _hexGridContainer.AddChild(tileNode);
 
-            if (tileNode is StaticBody3D tileBody)
+            if (tileNode is Area3D tileBody)
             {
                 tileBody.InputEvent += (camera, @event, position, normal, shapeIdx) =>
                 {
@@ -71,7 +72,7 @@ namespace Game.Systems
                 };
             }
 
-            _hexGridContainer.AddChild(tileNode);
+            
             tileNode.Position = HexToWorld(hexCoord);
             tileEntity.Add(new RenderComponent(tileNode));
             tileEntity.Add(new HexCoordComponent(hexCoord));
@@ -80,17 +81,6 @@ namespace Game.Systems
 
             _entityManager.AddEntity(tileEntity);
         }
-
-        // public void OnInputEvent(Node camera, InputEvent @event, Vector3 position, Vector3 normal, int shapeIdx)
-        // {
-        //     if (@event is InputEventMouseButton mouseEvent)
-        //     {
-        //         if (mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
-        //         {
-        //             EventBus.Instance.OnTileSelect(mouseEvent);
-        //         }
-        //     }
-        // }
 
         public List<Entity> GetNeighborTiles(Vector3I center)
         {

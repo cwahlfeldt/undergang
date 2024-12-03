@@ -38,11 +38,13 @@ namespace Game
         {
             var player = _entities.GetPlayer();
             var tileCoord = tile.Get<HexCoordComponent>().HexCoord;
-            GD.Print(player.Has<HexCoordComponent>());
+            GD.Print(tileCoord);
+            // GD.Print(player.Has<HexCoordComponent>());
 
             var targetHex = _hexGridSystem.WorldToHex(tileCoord);
             var currentPos = player.Get<HexCoordComponent>().HexCoord;
             var path = _pathFinderSystem.FindPath(currentPos, targetHex);
+            GD.Print(path.Count);
 
             if (path.Count > 0)
             {
@@ -78,18 +80,10 @@ namespace Game
 
         private void OnTurnChanged(Entity unit)
         {
-            // Now we get the Entity directly, no need for ID lookup
-            GD.Print($"Turn changed to: {unit.Id}");
-
-            var timer = GetTree().CreateTimer(0.5f);
-            timer.Timeout += () =>
+            if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Grunt)
             {
-                if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Grunt)
-                {
-                    ProcessEnemyTurn(unit);
-                    _turnSystem.EndTurn();
-                }
-            };
+                ProcessEnemyTurn(unit);
+            }
         }
 
         public async void ProcessEnemyTurn(Entity enemy)
@@ -103,6 +97,7 @@ namespace Game
             if (path.Count > 0)
             {
                 await _animationSystem.MoveEntity(enemy, path);
+                _turnSystem.EndTurn();
             }
         }
 

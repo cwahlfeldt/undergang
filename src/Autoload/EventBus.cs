@@ -1,5 +1,4 @@
 using System;
-using Game;
 using Godot;
 
 namespace Game.Autoload
