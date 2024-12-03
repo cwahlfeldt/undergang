@@ -18,13 +18,13 @@ namespace Game.Systems
 
             // GD.Print("wtf");
             var entityMoveRange = entity.Get<MoveRangeComponent>().MoveRange;
-            var rangedPath = path.Take(entityMoveRange + 1);
+            // var rangedPath = path.Take(entityMoveRange + 1);
             var entityNode = entity.Get<RenderComponent>().Node3D;
-            var locations = rangedPath.Select(HexGridSystem.HexToWorld).ToList();
+            var locations = path.Select(HexGridSystem.HexToWorld).ToList();
 
             await AnimationManager.Instance.MoveThrough(entityNode, locations);
 
-            entity.Update(new HexCoordComponent(rangedPath.Last()));
+            entity.Update(new HexCoordComponent(path.Last()));
         }
     }
 }

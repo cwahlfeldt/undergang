@@ -6,71 +6,59 @@ namespace Game.Systems
 {
     public class PathFinderSystem
     {
-        private readonly AStar3D _astar;
+        private readonly AStar3D _astar = new();
         private readonly EntityManager _entityManager;
         private readonly HexGridSystem _hexGridSystem;
+        private Dictionary<Vector3I, Entity> _tiles;
 
         public PathFinderSystem(EntityManager entityManager, HexGridSystem hexGridSystem)
         {
-            _astar = new AStar3D();
             _entityManager = entityManager;
             _hexGridSystem = hexGridSystem;
+            _tiles = new Dictionary<Vector3I, Entity>();
             SetupPathfinding();
         }
 
-        // Initializes the pathfinding graph based on walkable tiles
         public void SetupPathfinding()
         {
             _astar.Clear();
+            // Get all hex tiles into our dictionary
+            _tiles = _entityManager.GetHexGrid()
+                .ToDictionary(
+                    e => e.Get<HexCoordComponent>().HexCoord,
+                    e => e
+                );
+
             AddPoints();
             ConnectPoints();
         }
 
-        // Adds walkable tiles to the pathfinding graph
         private void AddPoints()
         {
-            var tiles = _entityManager.GetEntities().Values
-                .Where(e => e.Has<HexTileComponent>() && e.Has<HexCoordComponent>());
-
-            foreach (var tile in tiles)
+            foreach (var (coord, tile) in _tiles)
             {
-                var tileType = tile.Get<HexTileComponent>().Type;
-                var coord = tile.Get<HexCoordComponent>().HexCoord;
-
-                // Only add walkable tiles to the pathfinding graph
-                if (tileType != TileType.Wall && tileType != TileType.Lava)
+                if (tile.Get<HexTileComponent>().Type != TileType.Blocked)
                 {
-                    int index = GetIndexFromCoord(coord);
-                    var worldPos = tile.Get<RenderComponent>().Node3D.Position;
-                    _astar.AddPoint(index, worldPos);
+                    int index = tile.Get<HexTileComponent>().Index;
+                    _astar.AddPoint(index, tile.Get<RenderComponent>().Node3D.Position);
                 }
             }
         }
 
-        // Connects neighboring walkable tiles in the pathfinding graph
         private void ConnectPoints()
         {
-            var tiles = _entityManager.GetEntities().Values
-                .Where(e => e.Has<HexTileComponent>() && e.Has<HexCoordComponent>());
-
-            foreach (var tile in tiles)
+            foreach (var (coord, tile) in _tiles)
             {
-                var coord = tile.Get<HexCoordComponent>().HexCoord;
-                int currentIndex = GetIndexFromCoord(coord);
-
-                // Skip if this node wasn't added to the graph
+                int currentIndex = tile.Get<HexTileComponent>().Index;
                 if (!_astar.HasPoint(currentIndex))
                     continue;
 
-                // Check all neighbors
                 foreach (var dir in HexGridSystem.Directions.Values)
                 {
                     var neighborCoord = coord + dir;
-                    var neighborTile = _hexGridSystem.GetTileAtCoordinate(neighborCoord);
-
-                    if (neighborTile != null)
+                    if (_tiles.TryGetValue(neighborCoord, out var neighborTile))
                     {
-                        int neighborIndex = GetIndexFromCoord(neighborCoord);
+                        int neighborIndex = neighborTile.Get<HexTileComponent>().Index;
                         if (_astar.HasPoint(neighborIndex) && !_astar.ArePointsConnected(currentIndex, neighborIndex))
                         {
                             _astar.ConnectPoints(currentIndex, neighborIndex);
@@ -80,22 +68,34 @@ namespace Game.Systems
             }
         }
 
-        // Finds a path between two coordinates, returning a list of hex coordinates
-        public List<Vector3I> FindPath(Vector3I from, Vector3I to)
+        public List<Vector3I> FindPath(Vector3I from, Vector3I to, int maxRange)
         {
-            int fromIndex = GetIndexFromCoord(from);
-            int toIndex = GetIndexFromCoord(to);
+
+            if (!_tiles.TryGetValue(from, out var fromTile) || !_tiles.TryGetValue(to, out var toTile))
+                return [];
+
+            int fromIndex = fromTile.Get<HexTileComponent>().Index;
+            int toIndex = toTile.Get<HexTileComponent>().Index;
 
             if (!_astar.HasPoint(fromIndex) || !_astar.HasPoint(toIndex))
                 return [];
 
             var path = _astar.GetPointPath(fromIndex, toIndex);
-            
-            // Convert world positions back to hex coordinates
-            return path.Select(worldPos => _hexGridSystem.WorldToHex(worldPos)).ToList();
+            if (path == null || path.Length == 0)
+                return [];
+
+            // Convert world positions back to coordinates
+            var coordPath = path.Select(worldPos => _hexGridSystem.WorldToHex(worldPos)).ToList();
+
+            // Limit by max range if specified
+            if (maxRange > 0)
+            {
+                return coordPath.Take(maxRange + 1).ToList();
+            }
+
+            return coordPath;
         }
 
-        // Gets all coordinates reachable within a certain range
         public List<Vector3I> GetReachableCoords(Vector3I start, int range)
         {
             var reachable = new List<Vector3I>();
@@ -116,12 +116,9 @@ namespace Game.Systems
                 foreach (var dir in HexGridSystem.Directions.Values)
                 {
                     var neighborCoord = current + dir;
-                    var neighborTile = _hexGridSystem.GetTileAtCoordinate(neighborCoord);
-
-                    if (neighborTile != null && 
-                        !visited.Contains(neighborCoord) && 
-                        neighborTile.Get<HexTileComponent>().Type != TileType.Wall && 
-                        neighborTile.Get<HexTileComponent>().Type != TileType.Lava)
+                    if (_tiles.TryGetValue(neighborCoord, out var neighborTile) &&
+                        !visited.Contains(neighborCoord) &&
+                        neighborTile.Get<HexTileComponent>().Type != TileType.Blocked)
                     {
                         visited.Add(neighborCoord);
                         queue.Enqueue((neighborCoord, distance + 1));
@@ -130,18 +127,6 @@ namespace Game.Systems
             }
 
             return reachable;
-        }
-
-        // Generates a unique index for each hex coordinate
-        private int GetIndexFromCoord(Vector3I coord)
-        {
-            const int OFFSET = 100; // Large enough to handle your grid size
-            int x = coord.X + OFFSET;
-            int y = coord.Y + OFFSET;
-            int z = coord.Z + OFFSET;
-
-            // Create unique positive index
-            return x * 10000 + y * 100 + z;
         }
     }
 }

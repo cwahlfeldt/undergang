@@ -45,15 +45,17 @@ namespace Game.Systems
             var coordinates = GenerateHexCoordinates(radius);
 
             // Create tile entities
+            var index = 0;
             foreach (var coord in coordinates)
             {
-                CreateTileEntity(coord);
+                CreateTileEntity(coord, index);
+                index++;
             }
 
             _entityManager.AddEntity(gridEntity);
         }
 
-        private void CreateTileEntity(Vector3I hexCoord)
+        private void CreateTileEntity(Vector3I hexCoord, int index)
         {
             var tileEntity = new Entity(_entityManager.GetNextId());
             var tileNode = _hexTileScene.Instantiate<Node3D>();
@@ -73,11 +75,12 @@ namespace Game.Systems
             }
 
             
+            tileNode.Name = $"Tile {hexCoord} {index}";
             tileNode.Position = HexToWorld(hexCoord);
             tileEntity.Add(new RenderComponent(tileNode));
             tileEntity.Add(new HexCoordComponent(hexCoord));
-            tileEntity.Add(new HexTileComponent(TileType.Floor));
-            tileEntity.Add(new NameComponent($"Tile_{hexCoord}"));
+            tileEntity.Add(new HexTileComponent(TileType.Floor, index));
+            tileEntity.Add(new NameComponent(tileNode.Name));
 
             _entityManager.AddEntity(tileEntity);
         }

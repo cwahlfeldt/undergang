@@ -47,6 +47,19 @@ namespace Game
 
         public Entity GetEntity(int id) => _entities[id];
 
+        public Entity GetEntityByHexCoord(Vector3I hexCoord) =>
+            _entities.Values
+                .Where(e => e.Has<HexCoordComponent>() &&
+                            e.Has<RenderComponent>() &&
+                            e.Get<HexCoordComponent>().HexCoord == hexCoord)
+                            .FirstOrDefault();
+
+        public int GetHexTileIndex(Vector3I hexCoord) =>
+            _entities.Values
+                .Where(e => e.Has<HexTileComponent>() &&
+                            e.Get<HexCoordComponent>().HexCoord == hexCoord)
+                            .FirstOrDefault().Get<HexTileComponent>().Index;
+
         public List<Entity> GetEnemies() =>
             _entities.Values
                 .Where(e => e.Has<UnitTypeComponent>() &&

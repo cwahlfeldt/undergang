@@ -2,10 +2,20 @@ using Godot;
 
 namespace Game.Systems
 {
-    public class UnitSystem(EntityManager entityManager)
+    public class UnitSystem
     {
-        private readonly EntityManager _entityManager = entityManager;
-        
+        private readonly EntityManager _entityManager;
+        private Node3D _unitContainer;
+
+        public UnitSystem(EntityManager entityManager)
+        {
+            _entityManager = entityManager;
+            _unitContainer = new Node3D
+            {
+                Name = "Units"
+            };
+            _entityManager.GetRootNode().AddChild(_unitContainer);
+        }
         public Entity CreatePlayer(Vector3I hexCoord)
         {
             var scene = ResourceLoader.Load<PackedScene>("res://src/Scenes/Player.tscn");
@@ -38,7 +48,7 @@ namespace Game.Systems
             entity.Add(new HealthComponent(1));
 
             var unit = unitScene.Instantiate<Node3D>();
-            _entityManager.GetRootNode().AddChild(unit);
+            _unitContainer.AddChild(unit);
             unit.Position = HexGridSystem.HexToWorld(hexCoord);
 
             entity.Add(new RenderComponent(unit));
