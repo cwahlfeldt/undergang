@@ -9,7 +9,6 @@ namespace Game.Systems
     {
         private Queue<Entity> _turnQueue = new();
         private readonly EntityManager _entityManager = entityManager;
-        // public event Action<Entity> OnTurnChanged;
         public Entity CurrentUnit => _turnQueue.Count > 0 ? _turnQueue.Peek() : null;
 
         public void StartCombat()

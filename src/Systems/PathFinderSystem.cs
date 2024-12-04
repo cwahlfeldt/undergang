@@ -23,7 +23,7 @@ namespace Game.Systems
             // Get all hex tiles into our dictionary
             _tiles = _entityManager.GetHexGrid()
                 .ToDictionary(
-                    e => e.Get<HexCoordComponent>().HexCoord,
+                    e => e.Get<HexCoordComponent>().Coord,
                     e => e
                 );
 

@@ -87,6 +87,7 @@ namespace Game.Systems
             tileEntity.Add(new RenderComponent(tileNode));
             tileEntity.Add(new HexCoordComponent(hexCoord));
             tileEntity.Add(new HexTileComponent(tileType, index));
+            tileEntity.Add(new OccupantsComponent([]));
             tileEntity.Add(new NameComponent(tileNode.Name));
 
             _entityManager.AddEntity(tileEntity);
@@ -98,7 +99,29 @@ namespace Game.Systems
                 .FirstOrDefault(e =>
                     e.Has<HexTileComponent>() &&
                     e.Has<HexCoordComponent>() &&
-                    e.Get<HexCoordComponent>().HexCoord == hexCoord);
+                    e.Get<HexCoordComponent>().Coord == hexCoord);
+        }
+
+        public IEnumerable<Entity> GetTraversableTiles()
+        {
+            return _entityManager.GetEntities().Values
+                .Where(e =>
+                    e.Has<HexTileComponent>() &&
+                    e.Has<HexCoordComponent>() &&
+                    e.Has<OccupantsComponent>() &&
+                    !e.Get<OccupantsComponent>().Occupants.Any() &&
+                    !HexGrid.GetTilesInRange(Config.PlayerStart, 3).Contains(e.Get<HexCoordComponent>().Coord) &&
+                    e.Get<HexTileComponent>().Type == TileType.Floor);
+        }
+
+        public Vector3I GetRandomFloorTile()
+        {
+            var rand = new Random();
+            var entities = GetTraversableTiles();
+
+            return entities
+                .ElementAtOrDefault(rand.Next(0, entities.Count()))
+                .Get<HexCoordComponent>().Coord;
         }
     }
 }

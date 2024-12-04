@@ -26,7 +26,8 @@ namespace Game.Systems
                 if (tile.Get<HexTileComponent>().Type == TileType.Blocked)
                     continue;
 
-                var hexCoord = tile.Get<HexCoordComponent>().HexCoord;
+                var hexCoord = tile.Get<HexCoordComponent>().Coord;
+                // var tileIndex = tile.Get<HexTileComponent>().Index;
                 var labelPos = HexGrid.HexToWorld(hexCoord);
 
                 var coordLabel = new Label3D

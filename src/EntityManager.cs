@@ -51,13 +51,13 @@ namespace Game
             _entities.Values
                 .Where(e => e.Has<HexCoordComponent>() &&
                             e.Has<RenderComponent>() &&
-                            e.Get<HexCoordComponent>().HexCoord == hexCoord)
+                            e.Get<HexCoordComponent>().Coord == hexCoord)
                             .FirstOrDefault();
 
         public int GetHexTileIndex(Vector3I hexCoord) =>
             _entities.Values
                 .Where(e => e.Has<HexTileComponent>() &&
-                            e.Get<HexCoordComponent>().HexCoord == hexCoord)
+                            e.Get<HexCoordComponent>().Coord == hexCoord)
                             .FirstOrDefault().Get<HexTileComponent>().Index;
 
         public IEnumerable<Entity> GetEnemies() =>

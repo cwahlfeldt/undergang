@@ -11,6 +11,7 @@ namespace Game.Autoload
         public event Action<Entity> TileUnhover;
         public event Action<Entity> UnitHover;
         public event Action<Entity> UnitUnhover;
+        public event Action<Type, object> OnComponentChanged;
 
         public static EventBus Instance { get; private set; }
 

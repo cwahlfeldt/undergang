@@ -13,32 +13,28 @@ namespace Game
         private PathFinderSystem _pathFinderSystem;
         private UnitSystem _unitSystem;
         private TurnSystem _turnSystem;
-        private AnimationSystem _animationSystem;
         private TileHighlightSystem _tileHighlightSystem;
-        private CombatSystem _combatSystem;
         private DebugSystem _debugSystem;
         private bool _playerActionInProgress = false;
 
         public override void _Ready()
         {
+            EventBus.Instance.TurnChanged += OnTurnChanged;
+            EventBus.Instance.TileSelect += OnTileSelect;
+
             _entityManager = new EntityManager(this);
             _hexGridSystem = new HexGridSystem(_entityManager, 5);
             _pathFinderSystem = new PathFinderSystem(_entityManager);
             _unitSystem = new UnitSystem(_entityManager);
-            _animationSystem = new AnimationSystem();
             _turnSystem = new TurnSystem(_entityManager);
-            _combatSystem = new CombatSystem(_entityManager);
             _debugSystem = new DebugSystem(_entityManager);
             _tileHighlightSystem = new TileHighlightSystem(_entityManager);
 
             var player = _unitSystem.CreatePlayer(Config.PlayerStart);
-            _unitSystem.CreateGrunt(new Vector3I(-1, 0, 1));
-            _unitSystem.CreateGrunt(new Vector3I(2, -3, 1));
+            _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
+            _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
 
             _turnSystem.StartCombat();
-
-            EventBus.Instance.TurnChanged += OnTurnChanged;
-            EventBus.Instance.TileSelect += OnTileSelect;
         }
 
         private async void OnTileSelect(Entity tile)
@@ -48,76 +44,81 @@ namespace Game
 
             var player = _entityManager.GetPlayer();
             var playerMoveRange = player.Get<MoveRangeComponent>().MoveRange;
-            var tileCoord = tile.Get<HexCoordComponent>().HexCoord;
-            var currentPos = player.Get<HexCoordComponent>().HexCoord;
+            var tileCoord = tile.Get<HexCoordComponent>().Coord;
+            var currentPos = player.Get<HexCoordComponent>().Coord;
             var path = _pathFinderSystem.FindPath(currentPos, tileCoord, playerMoveRange);
 
             if (path.Count > 0)
             {
-                _tileHighlightSystem.SelectTile(_entityManager.GetEntityByHexCoord(path.Last()));
-                var movePos = path[playerMoveRange];
                 var enemies = _entityManager.GetEnemies();
 
-                _playerActionInProgress = true; // Set the flag to true
-                await _animationSystem.MoveEntity(player, path);
-                _playerActionInProgress = false;
+                // Note which enemies are in our attack range before moving
+                var initialAttackableEnemies = enemies.Where(enemy =>
+                    _unitSystem.IsInAttackRange(player, enemy.Get<HexCoordComponent>().Coord)).ToList();
 
-                // Check if this move would kill the player
-                foreach (var enemy in enemies)
+                _playerActionInProgress = true;
+                await _unitSystem.MoveUnit(player, path);
+
+                // Kill enemies that were attackable before and are still in range
+                foreach (var enemy in initialAttackableEnemies)
                 {
-                    bool wasAdjacent = _combatSystem.IsInAttackRange(enemy, currentPos);
-                    bool willBeAdjacent = _combatSystem.IsInAttackRange(enemy, movePos);
-                    // If we're moving adjacent to an enemy from a non-adjacent position, player dies
-                    if (!wasAdjacent && willBeAdjacent)
+                    if (_unitSystem.IsInAttackRange(player, enemy.Get<HexCoordComponent>().Coord))
                     {
-                        _turnSystem.RemoveUnit(player);
-                        _entityManager.RemoveEntity(player);
-                        GameOver();
-                        return;
+                        _turnSystem.RemoveUnit(enemy);
+                        _entityManager.RemoveEntity(enemy);
                     }
                 }
 
-                var killedEnemies = enemies.Where(enemy =>
-                    _combatSystem.IsInAttackRange(enemy, movePos));
-
-                foreach (var enemy in killedEnemies)
-                {
-                    _turnSystem.RemoveUnit(enemy);
-                    _entityManager.RemoveEntity(enemy);
-                }
-
-                if (!enemies.Any())
+                if (!_entityManager.GetEnemies().Any())
                 {
                     Victory();
                     return;
                 }
 
                 _turnSystem.EndTurn();
-            }
-        }
-
-        private async void OnTurnChanged(Entity unit)
-        {
-            if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
-            {
-                await ProcessEnemyTurn(unit);
+                _playerActionInProgress = false;
             }
         }
 
         public async Task ProcessEnemyTurn(Entity enemy)
         {
             var player = _entityManager.GetPlayer();
-            var playerPos = player.Get<HexCoordComponent>().HexCoord;
-            var currentEnemyPos = enemy.Get<HexCoordComponent>().HexCoord;
-            var enemyMoveRange = enemy.Get<MoveRangeComponent>().MoveRange;
+            if (player == null) return;
 
+            var playerPos = player.Get<HexCoordComponent>().Coord;
+
+            // Check if player is in attack range at start of turn
+            if (_unitSystem.IsInAttackRange(enemy, playerPos))
+            {
+                _turnSystem.RemoveUnit(player);
+                _entityManager.RemoveEntity(player);
+                GameOver();
+                return;
+            }
+
+            // If can't kill player, move towards them
+            var currentEnemyPos = enemy.Get<HexCoordComponent>().Coord;
+            var enemyMoveRange = enemy.Get<MoveRangeComponent>().MoveRange;
             var path = _pathFinderSystem.FindPath(currentEnemyPos, playerPos, enemyMoveRange);
 
             if (path.Count > 0)
-                await _animationSystem.MoveEntity(enemy, path);
+            {
+                await _unitSystem.MoveUnit(enemy, path);
+            }
 
             _turnSystem.EndTurn();
         }
+
+        private async void OnTurnChanged(Entity unit)
+        {
+            GD.Print($"Turn changed to {unit.Get<NameComponent>().Name}");
+
+            if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
+            {
+                await ProcessEnemyTurn(unit);
+            }
+        }
+
 
         public void GameOver()
         {
