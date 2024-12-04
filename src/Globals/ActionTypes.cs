@@ -1,6 +1,9 @@
 public enum Actions
 {
-    TileSelect,
-    UnitMove,
-    UnitAttack,
+    Move,
+    Attack,
+    Shoot,
+    Dash,
+    Block,
+    Wait
 }
