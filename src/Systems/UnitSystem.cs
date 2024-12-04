@@ -5,7 +5,7 @@ namespace Game.Systems
     public class UnitSystem
     {
         private readonly EntityManager _entityManager;
-        private Node3D _unitContainer;
+        private readonly Node3D _unitContainer;
 
         public UnitSystem(EntityManager entityManager)
         {
@@ -30,6 +30,7 @@ namespace Game.Systems
         {
             var scene = ResourceLoader.Load<PackedScene>("res://src/Scenes/Enemy.tscn");
             var entity = CreateUnit(UnitType.Grunt, hexCoord, scene);
+            entity.Add(new UnitTypeComponent(UnitType.Enemy));
 
             _entityManager.AddEntity(entity);
             return entity;
@@ -49,7 +50,7 @@ namespace Game.Systems
 
             var unit = unitScene.Instantiate<Node3D>();
             _unitContainer.AddChild(unit);
-            unit.Position = HexGridSystem.HexToWorld(hexCoord);
+            unit.Position = HexGrid.HexToWorld(hexCoord);
 
             entity.Add(new RenderComponent(unit));
             entity.Get<RenderComponent>().Node3D.Name = name;

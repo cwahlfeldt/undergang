@@ -40,7 +40,7 @@ namespace Game
             _entities.Remove(entity.Id);
         }
 
-        public List<Entity> GetHexGrid() =>
+        public IEnumerable<Entity> GetHexGrid() =>
             _entities.Values
                 .Where(e => e.Has<HexTileComponent>())
                 .ToList();
@@ -60,15 +60,15 @@ namespace Game
                             e.Get<HexCoordComponent>().HexCoord == hexCoord)
                             .FirstOrDefault().Get<HexTileComponent>().Index;
 
-        public List<Entity> GetEnemies() =>
+        public IEnumerable<Entity> GetEnemies() =>
             _entities.Values
                 .Where(e => e.Has<UnitTypeComponent>() &&
-                           e.Get<UnitTypeComponent>().UnitType == UnitType.Grunt)
+                            e.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
                 .ToList();
 
         public Entity GetPlayer() =>
             _entities.Values
                 .FirstOrDefault(e => e.Has<UnitTypeComponent>() &&
-                                    e.Get<UnitTypeComponent>().UnitType == UnitType.Player);
+                                     e.Get<UnitTypeComponent>().UnitType == UnitType.Player);
     }
 }

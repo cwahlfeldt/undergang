@@ -8,14 +8,12 @@ namespace Game.Systems
     {
         private readonly AStar3D _astar = new();
         private readonly EntityManager _entityManager;
-        private readonly HexGridSystem _hexGridSystem;
         private Dictionary<Vector3I, Entity> _tiles;
 
-        public PathFinderSystem(EntityManager entityManager, HexGridSystem hexGridSystem)
+        public PathFinderSystem(EntityManager entityManager)
         {
             _entityManager = entityManager;
-            _hexGridSystem = hexGridSystem;
-            _tiles = new Dictionary<Vector3I, Entity>();
+            _tiles = [];
             SetupPathfinding();
         }
 
@@ -53,7 +51,7 @@ namespace Game.Systems
                 if (!_astar.HasPoint(currentIndex))
                     continue;
 
-                foreach (var dir in HexGridSystem.Directions.Values)
+                foreach (var dir in HexGrid.Directions.Values)
                 {
                     var neighborCoord = coord + dir;
                     if (_tiles.TryGetValue(neighborCoord, out var neighborTile))
@@ -84,7 +82,7 @@ namespace Game.Systems
                 return [];
 
             // Convert world positions back to coordinates
-            var coordPath = path.Select(worldPos => _hexGridSystem.WorldToHex(worldPos)).ToList();
+            var coordPath = path.Select(worldPos => HexGrid.WorldToHex(worldPos)).ToList();
 
             // Limit by max range if specified
             if (maxRange > 0)
@@ -112,7 +110,7 @@ namespace Game.Systems
                 if (distance >= range)
                     continue;
 
-                foreach (var dir in HexGridSystem.Directions.Values)
+                foreach (var dir in HexGrid.Directions.Values)
                 {
                     var neighborCoord = current + dir;
                     if (_tiles.TryGetValue(neighborCoord, out var neighborTile) &&

@@ -1,33 +1,42 @@
 using System.Collections.Generic;
 using Godot;
 using Game.Autoload;
+using System.Threading.Tasks;
+using System;
 
 namespace Game.Systems
 {
-    public class InputSystem
+    public class TileHighlightSystem
     {
         private readonly EntityManager _entityManager;
-        private readonly HexGridSystem _hexGridSystem;
-        private Entity _selectedTile;
         private readonly HashSet<Entity> _highlightedTiles = new();
-        private readonly ShaderMaterial _highlightMaterial;
-        private readonly ShaderMaterial _selectedMaterial;
-        private readonly ShaderMaterial _defaultMaterial;
+        private readonly StandardMaterial3D _highlightMaterial;
+        private readonly StandardMaterial3D _selectedMaterial;
+        private readonly StandardMaterial3D _defaultMaterial;
+        private Entity _selectedTile;
 
-        public InputSystem(EntityManager entityManager, HexGridSystem hexGridSystem)
+        public TileHighlightSystem(EntityManager entityManager)
         {
             _entityManager = entityManager;
-            _hexGridSystem = hexGridSystem;
 
             // Load shader materials
-            _highlightMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/materials/HexTileHighlight.tres");
-            _selectedMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/materials/HexTileSelected.tres");
-            _defaultMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/materials/HexTileBase.tres");
+            _highlightMaterial = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileHighlight.tres");
+            _selectedMaterial = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileSelect.tres");
+            _defaultMaterial = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileBase.tres");
 
             // Subscribe to events
             EventBus.Instance.TileSelect += OnTileSelect;
             EventBus.Instance.TileHover += OnTileHover;
             EventBus.Instance.TileUnhover += OnTileUnhover;
+            EventBus.Instance.TurnChanged += OnTurnChanged;
+        }
+
+        private void OnTurnChanged(Entity unit)
+        {
+            if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Player)
+            {
+                SelectMoveRangeTiles(unit);
+            }
         }
 
         private void OnTileHover(Entity tile)
@@ -59,24 +68,31 @@ namespace Game.Systems
             }
         }
 
-        private void SelectTile(Entity tile)
+        public async void SelectTile(Entity entity)
         {
             ClearSelection();
-            _selectedTile = tile;
+            _selectedTile = entity;
             SetTileMaterial(_selectedTile, _selectedMaterial);
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+            ClearSelection();
+        }
+
+        private void SelectMoveRangeTiles(Entity entity)
+        {
+            ClearSelection();
+            var moveRangeMat = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileMoveRange.tres");
 
             // Highlight neighboring tiles
-            var neighbors = _hexGridSystem.GetNeighborTiles(tile.Get<HexCoordComponent>().HexCoord);
-            foreach (var neighbor in neighbors)
+            var rangedTiles = HexGrid.GetTilesInRange(entity.Get<HexCoordComponent>().HexCoord, entity.Get<MoveRangeComponent>().MoveRange);
+            foreach (var tile in rangedTiles)
             {
-                if (neighbor != _selectedTile)
+                var e = _entityManager.GetEntityByHexCoord(tile);
+                if (e != _selectedTile)
                 {
-                    _highlightedTiles.Add(neighbor);
-                    SetTileMaterial(neighbor, _highlightMaterial);
+                    _highlightedTiles.Add(e);
+                    SetTileMaterial(e, moveRangeMat);
                 }
             }
-
-            EventBus.Instance.OnTileSelect(tile);
         }
 
         private void ClearSelection()
@@ -94,7 +110,7 @@ namespace Game.Systems
             _highlightedTiles.Clear();
         }
 
-        private void SetTileMaterial(Entity tile, ShaderMaterial material)
+        private void SetTileMaterial(Entity tile, StandardMaterial3D material)
         {
             var renderComponent = tile.Get<RenderComponent>();
             if (renderComponent?.Node3D is Node3D node)

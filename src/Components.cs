@@ -2,8 +2,6 @@ namespace Game;
 
 using Godot;
 
-public enum UnitType { Player, Grunt }
-
 public record NameComponent(string Name);
 public record PositionComponent(Vector3 Position);
 public record HexCoordComponent(Vector3I HexCoord);

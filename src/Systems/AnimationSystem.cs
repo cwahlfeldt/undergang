@@ -18,7 +18,7 @@ namespace Game.Systems
 
             var entityMoveRange = entity.Get<MoveRangeComponent>().MoveRange;
             var entityNode = entity.Get<RenderComponent>().Node3D;
-            var locations = path.Select(HexGridSystem.HexToWorld).ToList();
+            var locations = path.Select(HexGrid.HexToWorld).ToList();
 
             await AnimationManager.Instance.MoveThrough(entityNode, locations);
 

@@ -27,7 +27,7 @@ namespace Game.Systems
                     continue;
 
                 var hexCoord = tile.Get<HexCoordComponent>().HexCoord;
-                var labelPos = HexGridSystem.HexToWorld(hexCoord);
+                var labelPos = HexGrid.HexToWorld(hexCoord);
 
                 var coordLabel = new Label3D
                 {

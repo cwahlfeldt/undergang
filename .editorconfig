@@ -2,3 +2,6 @@
 
 # IDE0130: Namespace does not match folder structure
 dotnet_style_namespace_match_folder = false
+
+# CA1050: Declare types in namespaces
+dotnet_diagnostic.CA1050.severity = none
