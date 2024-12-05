@@ -5,6 +5,7 @@ namespace Game.Autoload
 {
     public partial class EventBus : Node
     {
+        public event Action<Entity> UnitDefeated;
         public event Action<Entity> TurnChanged;
         public event Action<Entity> TileSelect;
         public event Action<Entity> TileHover;
@@ -19,6 +20,12 @@ namespace Game.Autoload
         {
             Instance = this;
         }
+
+        public void OnUnitDefeated(Entity unit)
+        {
+            UnitDefeated?.Invoke(unit);
+        }
+
 
         public void OnTileSelect(Entity tile)
         {

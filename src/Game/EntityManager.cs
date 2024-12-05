@@ -32,12 +32,18 @@ namespace Game
 
         public void RemoveEntity(Entity entity)
         {
-            // If it has a visual component, remove it from the scene
-            if (entity.Has<RenderComponent>())
-                entity.Get<RenderComponent>().Node3D.QueueFree();
-
-            // Remove from entity manager
+            // First remove from entity manager
             _entities.Remove(entity.Id);
+
+            // Then safely remove visual component if it exists
+            if (entity.Has<RenderComponent>())
+            {
+                var node = entity.Get<RenderComponent>().Node3D;
+                if (node != null && Node.IsInstanceValid(node))
+                {
+                    node.QueueFree();
+                }
+            }
         }
 
         public IEnumerable<Entity> GetHexGrid() =>

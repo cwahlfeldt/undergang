@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dooip7hir4st8"]
 
-[ext_resource type="Script" path="res://src/GameManager.cs" id="1_j3488"]
+[ext_resource type="Script" path="res://src/Game/GameManager.cs" id="1_j3488"]
 
 [node name="Main" type="Node3D"]
 

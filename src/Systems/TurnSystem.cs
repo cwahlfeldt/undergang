@@ -5,11 +5,23 @@ using Game.Autoload;
 
 namespace Game.Systems
 {
-    public class TurnSystem(EntityManager entityManager)
+    public class TurnSystem
     {
         private Queue<Entity> _turnQueue = new();
-        private readonly EntityManager _entityManager = entityManager;
+        private readonly EntityManager _entityManager;
         public Entity CurrentUnit => _turnQueue.Count > 0 ? _turnQueue.Peek() : null;
+
+        public TurnSystem(EntityManager entityManager)
+        {
+            _entityManager = entityManager;
+            // EventBus.Instance.UnitDefeated += OnUnitDefeated;
+        }
+
+        // private void OnUnitDefeated(Entity unit)
+        // {
+        //     RemoveUnit(unit);
+        //     _entityManager.RemoveEntity(unit);
+        // }
 
         public void StartCombat()
         {
@@ -63,6 +75,11 @@ namespace Game.Systems
         public bool IsUnitTurn(Entity unit)
         {
             return CurrentUnit?.Id == unit.Id;
+        }
+
+        public bool OnlyPlayerRemains()
+        {
+            return _turnQueue.Count == 1 && _turnQueue.First().Get<UnitTypeComponent>().UnitType == UnitType.Player;
         }
     }
 }

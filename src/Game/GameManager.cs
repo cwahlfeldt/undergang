@@ -3,6 +3,7 @@ using Game.Autoload;
 using Game.Systems;
 using System.Threading.Tasks;
 using System.Linq;
+using System;
 
 namespace Game
 {
@@ -21,6 +22,7 @@ namespace Game
         {
             EventBus.Instance.TurnChanged += OnTurnChanged;
             EventBus.Instance.TileSelect += OnTileSelect;
+            EventBus.Instance.UnitDefeated += OnUnitDefeated;
 
             _entityManager = new EntityManager(this);
             _hexGridSystem = new HexGridSystem(_entityManager, 5);
@@ -33,9 +35,11 @@ namespace Game
             var player = _unitSystem.CreatePlayer(Config.PlayerStart);
             _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
             _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
+            _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
 
             _turnSystem.StartCombat();
         }
+
 
         private async void OnTileSelect(Entity tile)
         {
@@ -50,33 +54,41 @@ namespace Game
 
             if (path.Count > 0)
             {
-                var enemies = _entityManager.GetEnemies();
+                // Get the tiles we can currently attack from our position
+                var currentAttackableTiles = _hexGridSystem.GetHexTilesInRange(currentPos, 1);
 
-                // Note which enemies are in our attack range before moving
-                var initialAttackableEnemies = enemies.Where(enemy =>
-                    _unitSystem.IsInAttackRange(player, enemy.Get<HexCoordComponent>().Coord)).ToList();
+                // Find enemies occupying those tiles before we move
+                var initialAttackableEnemies = currentAttackableTiles
+                    .SelectMany(tile => tile.Get<OccupantsComponent>().Occupants)
+                    .Where(occupant =>
+                        occupant.Has<UnitTypeComponent>() &&
+                        occupant.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
+                    .ToList();
 
                 _playerActionInProgress = true;
                 await _unitSystem.MoveUnit(player, path);
 
-                // Kill enemies that were attackable before and are still in range
-                foreach (var enemy in initialAttackableEnemies)
+                // Get the tiles we can now attack from our new position
+                var newAttackableTiles = _hexGridSystem.GetHexTilesInRange(path.Last(), 1);
+
+                // Kill enemies that were attackable before and are still in attackable tiles
+                if (initialAttackableEnemies.Any())
                 {
-                    if (_unitSystem.IsInAttackRange(player, enemy.Get<HexCoordComponent>().Coord))
+                    foreach (var enemy in initialAttackableEnemies)
                     {
-                        _turnSystem.RemoveUnit(enemy);
-                        _entityManager.RemoveEntity(enemy);
+                        // Check if enemy's current tile is in our new attack range
+                        var enemyTile = _entityManager.GetEntityByHexCoord(
+                            enemy.Get<HexCoordComponent>().Coord);
+
+                        if (newAttackableTiles.Contains(enemyTile))
+                        {
+                            _unitSystem.AttackUnit(player, enemy);
+                        }
                     }
                 }
 
-                if (!_entityManager.GetEnemies().Any())
-                {
-                    Victory();
-                    return;
-                }
-
-                _turnSystem.EndTurn();
                 _playerActionInProgress = false;
+                _turnSystem.EndTurn();
             }
         }
 
@@ -85,21 +97,22 @@ namespace Game
             var player = _entityManager.GetPlayer();
             if (player == null) return;
 
-            var playerPos = player.Get<HexCoordComponent>().Coord;
+            var enemyPos = enemy.Get<HexCoordComponent>().Coord;
+            var attackableTiles = _hexGridSystem.GetHexTilesInRange(enemyPos, 1);
 
-            // Check if player is in attack range at start of turn
-            if (_unitSystem.IsInAttackRange(enemy, playerPos))
+            // Check if player is in any attackable tile
+            var playerTile = _entityManager.GetEntityByHexCoord(
+                player.Get<HexCoordComponent>().Coord);
+
+            if (attackableTiles.Contains(playerTile))
             {
-                _turnSystem.RemoveUnit(player);
-                _entityManager.RemoveEntity(player);
-                GameOver();
-                return;
+                _unitSystem.AttackUnit(enemy, player);
             }
 
-            // If can't kill player, move towards them
-            var currentEnemyPos = enemy.Get<HexCoordComponent>().Coord;
+            // If can't attack player, move towards them
+            var playerPos = player.Get<HexCoordComponent>().Coord;
             var enemyMoveRange = enemy.Get<MoveRangeComponent>().MoveRange;
-            var path = _pathFinderSystem.FindPath(currentEnemyPos, playerPos, enemyMoveRange);
+            var path = _pathFinderSystem.FindPath(enemyPos, playerPos, enemyMoveRange);
 
             if (path.Count > 0)
             {
@@ -119,6 +132,26 @@ namespace Game
             }
         }
 
+        private void OnUnitDefeated(Entity unit)
+        {
+            if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Player)
+            {
+                GameOver();
+                _turnSystem.RemoveUnit(unit);
+                _entityManager.RemoveEntity(unit);
+                return;
+            }
+
+            if (!_entityManager.GetEnemies().Any())
+            {
+                Victory();
+                return;
+            }
+
+            _turnSystem.RemoveUnit(unit);
+            _entityManager.RemoveEntity(unit);
+
+        }
 
         public void GameOver()
         {

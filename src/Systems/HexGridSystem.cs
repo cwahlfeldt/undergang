@@ -123,5 +123,14 @@ namespace Game.Systems
                 .ElementAtOrDefault(rand.Next(0, entities.Count()))
                 .Get<HexCoordComponent>().Coord;
         }
+
+        public IEnumerable<Entity> GetHexTilesInRange(Vector3I coord, int range)
+        {
+            return _entityManager.GetEntities().Values
+                .Where(e =>
+                    e.Has<HexTileComponent>() &&
+                    e.Has<HexCoordComponent>() &&
+                    HexGrid.GetTilesInRange(coord, range).Contains(e.Get<HexCoordComponent>().Coord));
+        }
     }
 }

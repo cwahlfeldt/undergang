@@ -65,6 +65,21 @@ namespace Game.Systems
             return HexGrid.GetDistance(attackerPos, position) <= attackRange;
         }
 
+        public void AttackUnit(Entity attacker, Entity target)
+        {
+            var damage = attacker.Get<DamageComponent>().Damage;
+            var targetHealth = target.Get<HealthComponent>().Health;
+            var newHealth = targetHealth - damage;
+
+            if (newHealth <= 0)
+            {
+                EventBus.Instance.OnUnitDefeated(target);
+                return;
+            }
+
+            target.Update(new HealthComponent(newHealth));
+        }
+
         public Entity CreatePlayer(Vector3I hexCoord)
         {
             var scene = ResourceLoader.Load<PackedScene>("res://src/Scenes/Player.tscn");
@@ -96,6 +111,7 @@ namespace Game.Systems
             entity.Add(new UnitTypeComponent(unitType));
             entity.Add(new MoveRangeComponent(1));
             entity.Add(new HealthComponent(1));
+            entity.Add(new DamageComponent(1));
 
             // add node to scene
             var unit = unitScene.Instantiate<Node3D>();
