@@ -30,7 +30,6 @@ namespace Game
             _pathFinderSystem = new PathFinderSystem(_entityManager);
             _unitSystem = new UnitSystem(_entityManager);
             _turnSystem = new TurnSystem(_entityManager);
-            _uiSystem = new UISystem(_entityManager);
             _debugSystem = new DebugSystem(_entityManager);
             _tileHighlightSystem = new TileHighlightSystem(_entityManager);
 
@@ -39,6 +38,7 @@ namespace Game
             _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
             _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
 
+            _uiSystem = new UISystem(_entityManager);
             _turnSystem.StartCombat();
         }
 

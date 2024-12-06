@@ -6,16 +6,23 @@ namespace Game.Systems
     {
         private readonly EntityManager _entityManager;
         private Control _uiNode;
-
-        private const int HEART_SIZE = 40;
+        private const int HEART_SIZE = 32;
+        private const int HEART_SPACING = 8;
 
         public UISystem(EntityManager entityManager)
         {
             _entityManager = entityManager;
             _uiNode = _entityManager.GetRootNode().GetNode<Control>("UI/SubViewportContainer/SubViewport/Control");
-            AddHeart();
-            AddHeart(HEART_SIZE + 20);
-            AddHeart(HEART_SIZE * 3);
+            UpdatePlayerHearts();
+        }
+
+        private void UpdatePlayerHearts()
+        {
+            var playerHealth = _entityManager.GetPlayer().Get<HealthComponent>().Health;
+            for (int i = 0; i < playerHealth; i++)
+            {
+                AddHeart(i * (HEART_SIZE + HEART_SPACING));
+            }
         }
 
         public void AddHeart(float offsetLeft = 0f, float offsetRight = 0f, float offsetBottom = 40f, float offsetTop = 0f, int size = HEART_SIZE)
@@ -31,6 +38,5 @@ namespace Game.Systems
             };
             _uiNode.AddChild(heart);
         }
-
     }
 }
