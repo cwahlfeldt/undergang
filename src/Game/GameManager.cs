@@ -14,6 +14,7 @@ namespace Game
         private PathFinderSystem _pathFinderSystem;
         private UnitSystem _unitSystem;
         private TurnSystem _turnSystem;
+        private UISystem _uiSystem;
         private TileHighlightSystem _tileHighlightSystem;
         private DebugSystem _debugSystem;
         private bool _playerActionInProgress = false;
@@ -29,6 +30,7 @@ namespace Game
             _pathFinderSystem = new PathFinderSystem(_entityManager);
             _unitSystem = new UnitSystem(_entityManager);
             _turnSystem = new TurnSystem(_entityManager);
+            _uiSystem = new UISystem(_entityManager);
             _debugSystem = new DebugSystem(_entityManager);
             _tileHighlightSystem = new TileHighlightSystem(_entityManager);
 
