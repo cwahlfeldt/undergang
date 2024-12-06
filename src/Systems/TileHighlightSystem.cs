@@ -83,14 +83,15 @@ namespace Game.Systems
             var moveRangeMat = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileMoveRange.tres");
 
             // Highlight neighboring tiles
-            var rangedTiles = HexGrid.GetTilesInRange(entity.Get<HexCoordComponent>().Coord, entity.Get<MoveRangeComponent>().MoveRange);
+            // var rangedTiles = HexGrid.GetHexesInRange(entity.Get<HexCoordComponent>().Coord, entity.Get<MoveRangeComponent>().MoveRange);
+            var rangedTiles = _entityManager
+                .GetTilesInRange(entity.Get<HexCoordComponent>().Coord, entity.Get<MoveRangeComponent>().MoveRange);
             foreach (var tile in rangedTiles)
             {
-                var e = _entityManager.GetEntityByHexCoord(tile);
-                if (e != _selectedTile)
+                if (tile != _selectedTile)
                 {
-                    _highlightedTiles.Add(e);
-                    SetTileMaterial(e, moveRangeMat);
+                    _highlightedTiles.Add(tile);
+                    SetTileMaterial(tile, moveRangeMat);
                 }
             }
         }

@@ -21,7 +21,7 @@ namespace Game.Systems
         {
             _astar.Clear();
             // Get all hex tiles into our dictionary
-            _tiles = _entityManager.GetHexGrid()
+            _tiles = _entityManager.GetTiles()
                 .ToDictionary(
                     e => e.Get<HexCoordComponent>().Coord,
                     e => e

@@ -55,7 +55,7 @@ namespace Game
             if (path.Count > 0)
             {
                 // Get the tiles we can currently attack from our position
-                var currentAttackableTiles = _hexGridSystem.GetHexTilesInRange(currentPos, 1);
+                var currentAttackableTiles = _entityManager.GetTilesInRange(currentPos, 1);
 
                 // Find enemies occupying those tiles before we move
                 var initialAttackableEnemies = currentAttackableTiles
@@ -69,7 +69,7 @@ namespace Game
                 await _unitSystem.MoveUnit(player, path);
 
                 // Get the tiles we can now attack from our new position
-                var newAttackableTiles = _hexGridSystem.GetHexTilesInRange(path.Last(), 1);
+                var newAttackableTiles = _entityManager.GetTilesInRange(path.Last(), 1);
 
                 // Kill enemies that were attackable before and are still in attackable tiles
                 if (initialAttackableEnemies.Any())
@@ -77,7 +77,7 @@ namespace Game
                     foreach (var enemy in initialAttackableEnemies)
                     {
                         // Check if enemy's current tile is in our new attack range
-                        var enemyTile = _entityManager.GetEntityByHexCoord(
+                        var enemyTile = _entityManager.GetEntityByCoord(
                             enemy.Get<HexCoordComponent>().Coord);
 
                         if (newAttackableTiles.Contains(enemyTile))
@@ -98,10 +98,10 @@ namespace Game
             if (player == null) return;
 
             var enemyPos = enemy.Get<HexCoordComponent>().Coord;
-            var attackableTiles = _hexGridSystem.GetHexTilesInRange(enemyPos, 1);
+            var attackableTiles = _entityManager.GetTilesInRange(enemyPos, 1);
 
             // Check if player is in any attackable tile
-            var playerTile = _entityManager.GetEntityByHexCoord(
+            var playerTile = _entityManager.GetEntityByCoord(
                 player.Get<HexCoordComponent>().Coord);
 
             if (attackableTiles.Contains(playerTile))

@@ -93,44 +93,16 @@ namespace Game.Systems
             _entityManager.AddEntity(tileEntity);
         }
 
-        public Entity GetTileAtCoordinate(Vector3I hexCoord)
-        {
-            return _entityManager.GetEntities().Values
-                .FirstOrDefault(e =>
-                    e.Has<HexTileComponent>() &&
-                    e.Has<HexCoordComponent>() &&
-                    e.Get<HexCoordComponent>().Coord == hexCoord);
-        }
-
-        public IEnumerable<Entity> GetTraversableTiles()
-        {
-            return _entityManager.GetEntities().Values
-                .Where(e =>
-                    e.Has<HexTileComponent>() &&
-                    e.Has<HexCoordComponent>() &&
-                    e.Has<OccupantsComponent>() &&
-                    !e.Get<OccupantsComponent>().Occupants.Any() &&
-                    !HexGrid.GetTilesInRange(Config.PlayerStart, 3).Contains(e.Get<HexCoordComponent>().Coord) &&
-                    e.Get<HexTileComponent>().Type == TileType.Floor);
-        }
-
         public Vector3I GetRandomFloorTile()
         {
             var rand = new Random();
-            var entities = GetTraversableTiles();
+            var entities = _entityManager.GetTraversableTilesWithoutOccupants();
 
             return entities
                 .ElementAtOrDefault(rand.Next(0, entities.Count()))
                 .Get<HexCoordComponent>().Coord;
         }
 
-        public IEnumerable<Entity> GetHexTilesInRange(Vector3I coord, int range)
-        {
-            return _entityManager.GetEntities().Values
-                .Where(e =>
-                    e.Has<HexTileComponent>() &&
-                    e.Has<HexCoordComponent>() &&
-                    HexGrid.GetTilesInRange(coord, range).Contains(e.Get<HexCoordComponent>().Coord));
-        }
+
     }
 }

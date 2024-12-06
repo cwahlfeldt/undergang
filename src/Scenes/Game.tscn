@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://dhy30phrieo58"]
+
+[ext_resource type="Script" path="res://src/Game/GameManager.cs" id="1_8souu"]
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_8souu")
+
+[node name="UI" type="Node3D" parent="."]
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="UI"]
+anchors_preset = -1
+anchor_right = 0.188
+anchor_bottom = 0.119
+offset_left = 30.0
+offset_top = 31.0
+offset_right = 325.424
+offset_bottom = 465.888
+
+[node name="SubViewport" type="SubViewport" parent="UI/SubViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+render_target_update_mode = 4
+
+[node name="Control" type="Control" parent="UI/SubViewportContainer/SubViewport"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Heart" type="ColorRect" parent="UI/SubViewportContainer/SubViewport/Control"]
+offset_left = 50.055
+offset_right = 90.055
+offset_bottom = 40.0
+color = Color(1, 0.0862745, 0.321569, 1)
+
+[node name="Heart2" type="ColorRect" parent="UI/SubViewportContainer/SubViewport/Control"]
+offset_right = 40.0
+offset_bottom = 40.0
+color = Color(1, 0.0862745, 0.321569, 1)
+
+[node name="Heart3" type="ColorRect" parent="UI/SubViewportContainer/SubViewport/Control"]
+offset_left = 98.785
+offset_right = 138.785
+offset_bottom = 40.0
+color = Color(1, 0.0862745, 0.321569, 1)

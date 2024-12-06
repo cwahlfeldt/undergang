@@ -30,7 +30,7 @@ namespace Game.Systems
             }
 
             var oldCoord = entity.Get<HexCoordComponent>().Coord;
-            var oldTile = _entityManager.GetEntityByHexCoord(oldCoord);
+            var oldTile = _entityManager.GetEntityByCoord(oldCoord);
             var oldOccupants = oldTile.Get<OccupantsComponent>().Occupants;
 
             // Create new occupants list without the moving entity
@@ -44,7 +44,7 @@ namespace Game.Systems
             await AnimationManager.Instance.MoveThrough(entityNode, locations);
 
             var newCoord = path.Last();
-            var newTile = _entityManager.GetEntityByHexCoord(newCoord);
+            var newTile = _entityManager.GetEntityByCoord(newCoord);
             var newOccupants = newTile.Get<OccupantsComponent>().Occupants;
 
             // Create new occupants list with the moving entity added
@@ -121,7 +121,7 @@ namespace Game.Systems
             unit.Position = HexGrid.HexToWorld(hexCoord);
 
             // add occupant to tile
-            var tile = _entityManager.GetEntityByHexCoord(hexCoord);
+            var tile = _entityManager.GetEntityByCoord(hexCoord);
             tile.Update(new OccupantsComponent([entity]));
 
             return entity;

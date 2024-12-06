@@ -21,13 +21,12 @@ namespace Game.Systems
             };
             _entityManager.GetRootNode().AddChild(debugNode);
 
-            foreach (var tile in _entityManager.GetHexGrid())
+            foreach (var tile in _entityManager.GetTiles())
             {
                 if (tile.Get<HexTileComponent>().Type == TileType.Blocked)
                     continue;
 
                 var hexCoord = tile.Get<HexCoordComponent>().Coord;
-                // var tileIndex = tile.Get<HexTileComponent>().Index;
                 var labelPos = HexGrid.HexToWorld(hexCoord);
 
                 var coordLabel = new Label3D
