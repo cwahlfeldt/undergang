@@ -3,6 +3,7 @@ using System.Linq;
 using Godot;
 using Game.Autoload;
 using System;
+using System.Xml;
 
 namespace Game.Systems
 {
@@ -10,12 +11,15 @@ namespace Game.Systems
     {
         private const float HEX_SIZE = 1.05f;
         private readonly EntityManager _entityManager;
+        private readonly SpatialSystem _spatialSystem;
         private Node3D _hexGridContainer;
+        private Dictionary<Vector3I, Entity> _hexGrid = [];
         private readonly PackedScene _hexTileScene = ResourceLoader.Load<PackedScene>("res://src/Scenes/HexTile.tscn");
 
-        public HexGridSystem(EntityManager entityManager, int radius)
+        public HexGridSystem(EntityManager entityManager, SpatialSystem spatialSystem, int radius = 5)
         {
             _entityManager = entityManager;
+            _spatialSystem = spatialSystem;
             CreateHexGrid(radius);
         }
 
@@ -28,7 +32,7 @@ namespace Game.Systems
             _entityManager.GetRootNode().AddChild(_hexGridContainer);
 
             var gridEntity = new Entity(_entityManager.GetNextId());
-            gridEntity.Add(new HexGridComponent(radius));
+
             gridEntity.Add(new NameComponent(_hexGridContainer.Name));
             gridEntity.Add(new RenderComponent(_hexGridContainer));
 
@@ -41,14 +45,17 @@ namespace Game.Systems
             foreach (var coord in coordinates)
             {
                 var tileType = randBlockedTileIndices.Contains(index) && coord != Config.PlayerStart ? TileType.Blocked : TileType.Floor;
-                CreateTileEntity(coord, index, tileType);
+                var entity = CreateTileEntity(coord, index, tileType);
+                _spatialSystem.RegisterTile(coord, entity);
                 index++;
             }
+
+            gridEntity.Add(new HexGridComponent(_hexGrid));
 
             _entityManager.AddEntity(gridEntity);
         }
 
-        private void CreateTileEntity(Vector3I hexCoord, int index, TileType tileType)
+        private Entity CreateTileEntity(Vector3I hexCoord, int index, TileType tileType)
         {
             var tileEntity = new Entity(_entityManager.GetNextId());
             var tileNode = _hexTileScene.Instantiate<Node3D>();
@@ -63,6 +70,7 @@ namespace Game.Systems
                         mouseEvent.Pressed)
                     {
                         EventBus.Instance.OnTileSelect(tileEntity);
+                        EventBus.Instance.OnTileClick(hexCoord);
                     }
                 };
 
@@ -91,6 +99,7 @@ namespace Game.Systems
             tileEntity.Add(new NameComponent(tileNode.Name));
 
             _entityManager.AddEntity(tileEntity);
+            return tileEntity;
         }
 
         public Vector3I GetRandomFloorTile()

@@ -7,12 +7,12 @@ namespace Game.Systems
     public class PathFinderSystem
     {
         private readonly AStar3D _astar = new();
-        private readonly EntityManager _entityManager;
+        private readonly SpatialSystem _spatialSystem;
         private Dictionary<Vector3I, Entity> _tiles;
 
-        public PathFinderSystem(EntityManager entityManager)
+        public PathFinderSystem(SpatialSystem spatialSystem)
         {
-            _entityManager = entityManager;
+            _spatialSystem = spatialSystem;
             _tiles = [];
             SetupPathfinding();
         }
@@ -20,12 +20,7 @@ namespace Game.Systems
         public void SetupPathfinding()
         {
             _astar.Clear();
-            // Get all hex tiles into our dictionary
-            _tiles = _entityManager.GetTiles()
-                .ToDictionary(
-                    e => e.Get<HexCoordComponent>().Coord,
-                    e => e
-                );
+            _tiles = _spatialSystem.GetTiles();
 
             AddPoints();
             ConnectPoints();

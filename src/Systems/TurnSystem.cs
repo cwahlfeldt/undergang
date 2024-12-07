@@ -14,14 +14,9 @@ namespace Game.Systems
         public TurnSystem(EntityManager entityManager)
         {
             _entityManager = entityManager;
-            // EventBus.Instance.UnitDefeated += OnUnitDefeated;
+            EventBus.Instance.UnitDefeated += OnUnitDefeated;
         }
 
-        // private void OnUnitDefeated(Entity unit)
-        // {
-        //     RemoveUnit(unit);
-        //     _entityManager.RemoveEntity(unit);
-        // }
 
         public void StartCombat()
         {
@@ -80,6 +75,11 @@ namespace Game.Systems
         public bool OnlyPlayerRemains()
         {
             return _turnQueue.Count == 1 && _turnQueue.First().Get<UnitTypeComponent>().UnitType == UnitType.Player;
+        }
+
+        private void OnUnitDefeated(Entity unit)
+        {
+            RemoveUnit(unit);
         }
     }
 }

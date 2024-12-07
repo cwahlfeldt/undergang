@@ -13,10 +13,12 @@ namespace Game
         private HexGridSystem _hexGridSystem;
         private PathFinderSystem _pathFinderSystem;
         private UnitSystem _unitSystem;
+        private SpatialSystem _spatialSystem;
         private TurnSystem _turnSystem;
         private UISystem _uiSystem;
         private TileHighlightSystem _tileHighlightSystem;
         private DebugSystem _debugSystem;
+        private GameSystem _gameSystem;
         private bool _playerActionInProgress = false;
 
         public override void _Ready()
@@ -24,11 +26,14 @@ namespace Game
             EventBus.Instance.TurnChanged += OnTurnChanged;
             EventBus.Instance.TileSelect += OnTileSelect;
             EventBus.Instance.UnitDefeated += OnUnitDefeated;
+            EventBus.Instance.TileClick += OnTileClick;
 
             _entityManager = new EntityManager(this);
-            _hexGridSystem = new HexGridSystem(_entityManager, 5);
-            _pathFinderSystem = new PathFinderSystem(_entityManager);
-            _unitSystem = new UnitSystem(_entityManager);
+            _spatialSystem = new SpatialSystem(_entityManager);
+            _hexGridSystem = new HexGridSystem(_entityManager, _spatialSystem);
+            _pathFinderSystem = new PathFinderSystem(_spatialSystem);
+            _unitSystem = new UnitSystem(_entityManager, _spatialSystem);
+
             _turnSystem = new TurnSystem(_entityManager);
             _debugSystem = new DebugSystem(_entityManager);
             _tileHighlightSystem = new TileHighlightSystem(_entityManager);
@@ -39,9 +44,20 @@ namespace Game
             _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
 
             _uiSystem = new UISystem(_entityManager);
+
+            // _gameSystem = new GameSystem(_entityManager, _spatialSystem, _hexGridSystem, _unitSystem, _pathFinderSystem, _turnSystem);
+            // _gameSystem.StartGame();
             _turnSystem.StartCombat();
         }
 
+        private void OnTileClick(Vector3I coord)
+        {
+            var tile = _spatialSystem.GetTileAt(coord);
+            // var path = 
+
+            var neighborTiles = HexGrid.GetHexesInRange(coord, 1);
+            GD.Print($"Tile clicked: {tile.Get<NameComponent>().Name}");
+        }
 
         private async void OnTileSelect(Entity tile)
         {
@@ -109,6 +125,8 @@ namespace Game
             if (attackableTiles.Contains(playerTile))
             {
                 _unitSystem.AttackUnit(enemy, player);
+                _turnSystem.EndTurn();
+                return;
             }
 
             // If can't attack player, move towards them

@@ -54,7 +54,7 @@ public class HexGrid
         return RoundToHex(new Vector3(q, r, s));
     }
 
-    public static List<Vector3I> GetHexesInRange(Vector3I center, int range)
+    public static IEnumerable<Vector3I> GetHexesInRange(Vector3I center, int range)
     {
         var tiles = new List<Vector3I>();
         // For range N, check all tiles up to N distance away

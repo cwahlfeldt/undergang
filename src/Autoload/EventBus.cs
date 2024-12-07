@@ -6,8 +6,10 @@ namespace Game.Autoload
     public partial class EventBus : Node
     {
         public event Action<Entity> UnitDefeated;
+        public event Action<Entity, Vector3I, Vector3I> MoveUnit;
         public event Action<Entity> TurnChanged;
         public event Action<Entity> TileSelect;
+        public event Action<Vector3I> TileClick;
         public event Action<Entity> TileHover;
         public event Action<Entity> TileUnhover;
         public event Action<Entity> UnitHover;
@@ -21,6 +23,11 @@ namespace Game.Autoload
             Instance = this;
         }
 
+        public void OnMoveUnit(Entity unit, Vector3I from, Vector3I to)
+        {
+            MoveUnit?.Invoke(unit, from, to);
+        }
+
         public void OnUnitDefeated(Entity unit)
         {
             UnitDefeated?.Invoke(unit);
@@ -30,6 +37,11 @@ namespace Game.Autoload
         public void OnTileSelect(Entity tile)
         {
             TileSelect?.Invoke(tile);
+        }
+
+        public void OnTileClick(Vector3I coord)
+        {
+            TileClick?.Invoke(coord);
         }
 
         public void OnTurnChanged(Entity tile)

@@ -9,11 +9,14 @@ namespace Game.Systems
     public class UnitSystem
     {
         private readonly EntityManager _entityManager;
+        private readonly SpatialSystem _spatialSystem;
         private readonly Node3D _unitContainer;
 
-        public UnitSystem(EntityManager entityManager)
+        public UnitSystem(EntityManager entityManager, SpatialSystem spatialSystem)
         {
             _entityManager = entityManager;
+            _spatialSystem = spatialSystem;
+
             _unitContainer = new Node3D
             {
                 Name = "Units"
@@ -123,6 +126,8 @@ namespace Game.Systems
             // add occupant to tile
             var tile = _entityManager.GetEntityByCoord(hexCoord);
             tile.Update(new OccupantsComponent([entity]));
+
+            _spatialSystem.RegisterUnit(hexCoord, entity);
 
             return entity;
         }

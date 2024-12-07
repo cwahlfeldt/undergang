@@ -3,6 +3,7 @@ using Godot;
 
 namespace Game
 {
+    public record HexGridComponent(Dictionary<Vector3I, Entity> Grid);
     public record NameComponent(string Name);
     public record HexCoordComponent(Vector3I Coord);
     public record UnitTypeComponent(UnitType UnitType);
@@ -13,5 +14,5 @@ namespace Game
     public record HexTileComponent(TileType Type, int Index);
     public record OccupantsComponent(IEnumerable<Entity> Occupants);
     public record RenderComponent(Node3D Node3D);
-    public record HexGridComponent(int Radius);
+    public record SelectedComponent(bool Selected);
 }
