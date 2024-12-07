@@ -9,10 +9,10 @@ namespace Game.Systems
     public class UnitSystem
     {
         private readonly EntityManager _entityManager;
-        private readonly SpatialSystem _spatialSystem;
+        private readonly GridSystem _spatialSystem;
         private readonly Node3D _unitContainer;
 
-        public UnitSystem(EntityManager entityManager, SpatialSystem spatialSystem)
+        public UnitSystem(EntityManager entityManager, GridSystem spatialSystem)
         {
             _entityManager = entityManager;
             _spatialSystem = spatialSystem;

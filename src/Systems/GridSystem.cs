@@ -6,13 +6,13 @@ using System.Linq;
 
 namespace Game
 {
-    public class SpatialSystem
+    public class GridSystem
     {
         private readonly Dictionary<Vector3I, Entity> _tiles = [];
         private readonly Dictionary<Vector3I, Entity> _units = [];
         private readonly EntityManager _entityManager;
 
-        public SpatialSystem(EntityManager entityManager)
+        public GridSystem(EntityManager entityManager)
         {
             _entityManager = entityManager;
             Clear();
@@ -45,8 +45,6 @@ namespace Game
                 _units.Remove(from);
                 _units[to] = unit;
             }
-
-            EventBus.Instance.OnMoveUnit(unit, from, to);
         }
 
         public bool IsCoordOccupied(Vector3I coord)

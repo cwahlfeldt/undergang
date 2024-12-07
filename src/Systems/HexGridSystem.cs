@@ -11,12 +11,12 @@ namespace Game.Systems
     {
         private const float HEX_SIZE = 1.05f;
         private readonly EntityManager _entityManager;
-        private readonly SpatialSystem _spatialSystem;
+        private readonly GridSystem _spatialSystem;
         private Node3D _hexGridContainer;
         private Dictionary<Vector3I, Entity> _hexGrid = [];
         private readonly PackedScene _hexTileScene = ResourceLoader.Load<PackedScene>("res://src/Scenes/HexTile.tscn");
 
-        public HexGridSystem(EntityManager entityManager, SpatialSystem spatialSystem, int radius = 5)
+        public HexGridSystem(EntityManager entityManager, GridSystem spatialSystem, int radius = 5)
         {
             _entityManager = entityManager;
             _spatialSystem = spatialSystem;

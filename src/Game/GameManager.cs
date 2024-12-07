@@ -3,7 +3,7 @@ using Game.Autoload;
 using Game.Systems;
 using System.Threading.Tasks;
 using System.Linq;
-using System;
+using System.Collections.Generic;
 
 namespace Game
 {
@@ -13,29 +13,24 @@ namespace Game
         private HexGridSystem _hexGridSystem;
         private PathFinderSystem _pathFinderSystem;
         private UnitSystem _unitSystem;
-        private SpatialSystem _spatialSystem;
+        private GridSystem _spatialSystem;
         private TurnSystem _turnSystem;
         private UISystem _uiSystem;
         private TileHighlightSystem _tileHighlightSystem;
-        private DebugSystem _debugSystem;
-        private GameSystem _gameSystem;
         private bool _playerActionInProgress = false;
 
         public override void _Ready()
         {
-            EventBus.Instance.TurnChanged += OnTurnChanged;
-            EventBus.Instance.TileSelect += OnTileSelect;
-            EventBus.Instance.UnitDefeated += OnUnitDefeated;
-            EventBus.Instance.TileClick += OnTileClick;
+            SetupEventHandlers();
 
             _entityManager = new EntityManager(this);
-            _spatialSystem = new SpatialSystem(_entityManager);
+            _spatialSystem = new GridSystem(_entityManager);
             _hexGridSystem = new HexGridSystem(_entityManager, _spatialSystem);
             _pathFinderSystem = new PathFinderSystem(_spatialSystem);
             _unitSystem = new UnitSystem(_entityManager, _spatialSystem);
 
             _turnSystem = new TurnSystem(_entityManager);
-            _debugSystem = new DebugSystem(_entityManager);
+            // _debugSystem = new DebugSystem(_entityManager);
             _tileHighlightSystem = new TileHighlightSystem(_entityManager);
 
             var player = _unitSystem.CreatePlayer(Config.PlayerStart);
@@ -44,111 +39,126 @@ namespace Game
             _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
 
             _uiSystem = new UISystem(_entityManager);
-
-            // _gameSystem = new GameSystem(_entityManager, _spatialSystem, _hexGridSystem, _unitSystem, _pathFinderSystem, _turnSystem);
-            // _gameSystem.StartGame();
             _turnSystem.StartCombat();
         }
 
-        private void OnTileClick(Vector3I coord)
+        private void SetupEventHandlers()
         {
-            var tile = _spatialSystem.GetTileAt(coord);
-            // var path = 
-
-            var neighborTiles = HexGrid.GetHexesInRange(coord, 1);
-            GD.Print($"Tile clicked: {tile.Get<NameComponent>().Name}");
+            EventBus.Instance.TurnChanged += OnTurnChanged;
+            EventBus.Instance.TileSelect += OnTileSelect;
+            EventBus.Instance.UnitDefeated += OnUnitDefeated;
         }
 
         private async void OnTileSelect(Entity tile)
         {
-            if (_playerActionInProgress)
-                return;
+            if (_playerActionInProgress) return;
 
             var player = _entityManager.GetPlayer();
-            var playerMoveRange = player.Get<MoveRangeComponent>().MoveRange;
-            var tileCoord = tile.Get<HexCoordComponent>().Coord;
-            var currentPos = player.Get<HexCoordComponent>().Coord;
-            var path = _pathFinderSystem.FindPath(currentPos, tileCoord, playerMoveRange);
+            var path = GetPathToTile(player, tile);
 
             if (path.Count > 0)
             {
-                // Get the tiles we can currently attack from our position
-                var currentAttackableTiles = _entityManager.GetTilesInRange(currentPos, 1);
-
-                // Find enemies occupying those tiles before we move
-                var initialAttackableEnemies = currentAttackableTiles
-                    .SelectMany(tile => tile.Get<OccupantsComponent>().Occupants)
-                    .Where(occupant =>
-                        occupant.Has<UnitTypeComponent>() &&
-                        occupant.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
-                    .ToList();
-
                 _playerActionInProgress = true;
-                await _unitSystem.MoveUnit(player, path);
-
-                // Get the tiles we can now attack from our new position
-                var newAttackableTiles = _entityManager.GetTilesInRange(path.Last(), 1);
-
-                // Kill enemies that were attackable before and are still in attackable tiles
-                if (initialAttackableEnemies.Any())
-                {
-                    foreach (var enemy in initialAttackableEnemies)
-                    {
-                        // Check if enemy's current tile is in our new attack range
-                        var enemyTile = _entityManager.GetEntityByCoord(
-                            enemy.Get<HexCoordComponent>().Coord);
-
-                        if (newAttackableTiles.Contains(enemyTile))
-                        {
-                            _unitSystem.AttackUnit(player, enemy);
-                        }
-                    }
-                }
-
+                await ProcessPlayerTurn(player, path);
                 _playerActionInProgress = false;
                 _turnSystem.EndTurn();
             }
         }
 
-        public async Task ProcessEnemyTurn(Entity enemy)
+        private List<Vector3I> GetPathToTile(Entity player, Entity tile)
+        {
+            var playerMoveRange = player.Get<MoveRangeComponent>().MoveRange;
+            var currentPos = player.Get<HexCoordComponent>().Coord;
+            var targetPos = tile.Get<HexCoordComponent>().Coord;
+            return _pathFinderSystem.FindPath(currentPos, targetPos, playerMoveRange);
+        }
+
+        private async Task ProcessPlayerTurn(Entity player, List<Vector3I> path)
+        {
+            var initialAttackableEnemies = GetAttackableEnemies(player.Get<HexCoordComponent>().Coord);
+
+            await _unitSystem.MoveUnit(player, path);
+
+            HandlePlayerAttacks(player, initialAttackableEnemies, path.Last());
+            HandleEnemyCounterattacks(player);
+        }
+
+        private List<Entity> GetAttackableEnemies(Vector3I position)
+        {
+            return _entityManager.GetTilesInRange(position, 1)
+                .SelectMany(tile => tile.Get<OccupantsComponent>().Occupants)
+                .Where(entity => entity.Has<UnitTypeComponent>() &&
+                       entity.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
+                .ToList();
+        }
+
+        private void HandlePlayerAttacks(Entity player, List<Entity> initialEnemies, Vector3I finalPosition)
+        {
+            var newAttackableTiles = _entityManager.GetTilesInRange(finalPosition, 1);
+            foreach (var enemy in initialEnemies)
+            {
+                var enemyTile = _entityManager.GetEntityByCoord(enemy.Get<HexCoordComponent>().Coord);
+                if (newAttackableTiles.Contains(enemyTile))
+                {
+                    _unitSystem.AttackUnit(player, enemy);
+                }
+            }
+        }
+
+        private void HandleEnemyCounterattacks(Entity player)
+        {
+            foreach (var enemy in _entityManager.GetEnemies())
+            {
+                var enemyRange = _entityManager.GetTilesInRange(enemy.Get<HexCoordComponent>().Coord, 1);
+                var playerTile = _entityManager.GetEntityByCoord(player.Get<HexCoordComponent>().Coord);
+
+                if (enemyRange.Contains(playerTile))
+                {
+                    _unitSystem.AttackUnit(enemy, player);
+                    _uiSystem.RemoveHeart();
+                }
+            }
+        }
+
+        private async void OnTurnChanged(Entity unit)
+        {
+            if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
+            {
+                await ProcessEnemyTurn(unit);
+            }
+        }
+
+        private async Task ProcessEnemyTurn(Entity enemy)
         {
             var player = _entityManager.GetPlayer();
             if (player == null) return;
 
-            var enemyPos = enemy.Get<HexCoordComponent>().Coord;
-            var attackableTiles = _entityManager.GetTilesInRange(enemyPos, 1);
-
-            // Check if player is in any attackable tile
-            var playerTile = _entityManager.GetEntityByCoord(
-                player.Get<HexCoordComponent>().Coord);
-
-            if (attackableTiles.Contains(playerTile))
+            if (!IsPlayerInAttackRange(enemy, player))
             {
-                _unitSystem.AttackUnit(enemy, player);
-                _turnSystem.EndTurn();
-                return;
-            }
-
-            // If can't attack player, move towards them
-            var playerPos = player.Get<HexCoordComponent>().Coord;
-            var enemyMoveRange = enemy.Get<MoveRangeComponent>().MoveRange;
-            var path = _pathFinderSystem.FindPath(enemyPos, playerPos, enemyMoveRange);
-
-            if (path.Count > 0)
-            {
-                await _unitSystem.MoveUnit(enemy, path);
+                await MoveEnemyTowardsPlayer(enemy, player);
             }
 
             _turnSystem.EndTurn();
         }
 
-        private async void OnTurnChanged(Entity unit)
+        private bool IsPlayerInAttackRange(Entity enemy, Entity player)
         {
-            GD.Print($"Turn changed to {unit.Get<NameComponent>().Name}");
+            var attackableTiles = _entityManager.GetTilesInRange(enemy.Get<HexCoordComponent>().Coord, 1);
+            var playerTile = _entityManager.GetEntityByCoord(player.Get<HexCoordComponent>().Coord);
+            return attackableTiles.Contains(playerTile);
+        }
 
-            if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
+        private async Task MoveEnemyTowardsPlayer(Entity enemy, Entity player)
+        {
+            var path = _pathFinderSystem.FindPath(
+                enemy.Get<HexCoordComponent>().Coord,
+                player.Get<HexCoordComponent>().Coord,
+                enemy.Get<MoveRangeComponent>().MoveRange
+            );
+
+            if (path.Count > 0)
             {
-                await ProcessEnemyTurn(unit);
+                await _unitSystem.MoveUnit(enemy, path);
             }
         }
 
@@ -156,31 +166,30 @@ namespace Game
         {
             if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Player)
             {
-                GameOver();
-                _turnSystem.RemoveUnit(unit);
-                _entityManager.RemoveEntity(unit);
-                return;
+                HandlePlayerDefeat(unit);
             }
+            else
+            {
+                HandleEnemyDefeat(unit);
+            }
+        }
+
+        private void HandlePlayerDefeat(Entity player)
+        {
+            GD.Print("Game Over - Player Died!");
+            _turnSystem.RemoveUnit(player);
+            _entityManager.RemoveEntity(player);
+        }
+
+        private void HandleEnemyDefeat(Entity enemy)
+        {
+            _turnSystem.RemoveUnit(enemy);
+            _entityManager.RemoveEntity(enemy);
 
             if (!_entityManager.GetEnemies().Any())
             {
-                Victory();
-                return;
+                GD.Print("KILL EM ALL!");
             }
-
-            _turnSystem.RemoveUnit(unit);
-            _entityManager.RemoveEntity(unit);
-
-        }
-
-        public void GameOver()
-        {
-            GD.Print("Game Over - Player Died!");
-        }
-
-        public void Victory()
-        {
-            GD.Print("KILL EM ALL!");
         }
     }
 }

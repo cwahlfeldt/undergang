@@ -7,10 +7,10 @@ namespace Game.Systems
     public class PathFinderSystem
     {
         private readonly AStar3D _astar = new();
-        private readonly SpatialSystem _spatialSystem;
+        private readonly GridSystem _spatialSystem;
         private Dictionary<Vector3I, Entity> _tiles;
 
-        public PathFinderSystem(SpatialSystem spatialSystem)
+        public PathFinderSystem(GridSystem spatialSystem)
         {
             _spatialSystem = spatialSystem;
             _tiles = [];

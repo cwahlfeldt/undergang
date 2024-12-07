@@ -7,6 +7,8 @@ namespace Game
     public class EntityManager(Node3D rootNode)
     {
         private readonly Dictionary<int, Entity> _entities = [];
+        private readonly Dictionary<Vector3I, Entity> _tiles = [];
+        private readonly Dictionary<Vector3I, Entity> _units = [];
         private int _nextId = 0;
         private readonly Node3D _rootNode = rootNode;
 
