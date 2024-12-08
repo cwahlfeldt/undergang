@@ -21,7 +21,7 @@ namespace Game.Systems
             };
             _entityManager.GetRootNode().AddChild(debugNode);
 
-            foreach (var tile in _entityManager.GetTiles())
+            foreach (var (coord, tile) in _entityManager.GetTiles())
             {
                 if (tile.Get<HexTileComponent>().Type == TileType.Blocked)
                     continue;

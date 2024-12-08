@@ -34,11 +34,6 @@ namespace Game.Systems
 
             var oldCoord = entity.Get<HexCoordComponent>().Coord;
             var oldTile = _entityManager.GetEntityByCoord(oldCoord);
-            var oldOccupants = oldTile.Get<OccupantsComponent>().Occupants;
-
-            // Create new occupants list without the moving entity
-            var updatedOldOccupants = oldOccupants.Where(e => e.Id != entity.Id).ToList();
-            oldTile.Update(new OccupantsComponent(updatedOldOccupants));
 
             var entityMoveRange = entity.Get<MoveRangeComponent>().MoveRange;
             var entityNode = entity.Get<RenderComponent>().Node3D;
@@ -48,12 +43,7 @@ namespace Game.Systems
 
             var newCoord = path.Last();
             var newTile = _entityManager.GetEntityByCoord(newCoord);
-            var newOccupants = newTile.Get<OccupantsComponent>().Occupants;
 
-            // Create new occupants list with the moving entity added
-            var updatedNewOccupants = new List<Entity>(newOccupants) { entity };
-
-            newTile.Update(new OccupantsComponent(updatedNewOccupants));
             entity.Update(new HexCoordComponent(newCoord));
         }
 
@@ -122,10 +112,6 @@ namespace Game.Systems
             entity.Add(new RenderComponent(unit));
             entity.Get<RenderComponent>().Node3D.Name = name;
             unit.Position = HexGrid.HexToWorld(hexCoord);
-
-            // add occupant to tile
-            var tile = _entityManager.GetEntityByCoord(hexCoord);
-            tile.Update(new OccupantsComponent([entity]));
 
             _spatialSystem.RegisterUnit(hexCoord, entity);
 

@@ -6,13 +6,13 @@ using System.Linq;
 
 namespace Game
 {
-    public class GridSystem
+    public class GridManager
     {
         private readonly Dictionary<Vector3I, Entity> _tiles = [];
         private readonly Dictionary<Vector3I, Entity> _units = [];
         private readonly EntityManager _entityManager;
 
-        public GridSystem(EntityManager entityManager)
+        public GridManager(EntityManager entityManager)
         {
             _entityManager = entityManager;
             Clear();

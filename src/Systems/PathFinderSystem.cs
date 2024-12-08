@@ -7,12 +7,12 @@ namespace Game.Systems
     public class PathFinderSystem
     {
         private readonly AStar3D _astar = new();
-        private readonly GridSystem _spatialSystem;
+        private readonly GridSystem _gridSystem;
         private Dictionary<Vector3I, Entity> _tiles;
 
-        public PathFinderSystem(GridSystem spatialSystem)
+        public PathFinderSystem(GridSystem gridSystem)
         {
-            _spatialSystem = spatialSystem;
+            _gridSystem = gridSystem;
             _tiles = [];
             SetupPathfinding();
         }
@@ -20,7 +20,7 @@ namespace Game.Systems
         public void SetupPathfinding()
         {
             _astar.Clear();
-            _tiles = _spatialSystem.GetTiles();
+            _tiles = _gridSystem.GetTiles();
 
             AddPoints();
             ConnectPoints();
@@ -33,7 +33,7 @@ namespace Game.Systems
                 if (tile.Get<HexTileComponent>().Type != TileType.Blocked)
                 {
                     int index = tile.Get<HexTileComponent>().Index;
-                    _astar.AddPoint(index, tile.Get<RenderComponent>().Node3D.Position);
+                    _astar.AddPoint(index, HexGrid.HexToWorld(coord));
                 }
             }
         }

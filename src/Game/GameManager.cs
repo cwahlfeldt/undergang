@@ -10,10 +10,11 @@ namespace Game
     public partial class GameManager : Node3D
     {
         private EntityManager _entityManager;
+        private GridManager _gridManager;
         private HexGridSystem _hexGridSystem;
         private PathFinderSystem _pathFinderSystem;
         private UnitSystem _unitSystem;
-        private GridSystem _spatialSystem;
+        private GridSystem _gridSystem;
         private TurnSystem _turnSystem;
         private UISystem _uiSystem;
         private TileHighlightSystem _tileHighlightSystem;
@@ -24,16 +25,17 @@ namespace Game
             SetupEventHandlers();
 
             _entityManager = new EntityManager(this);
-            _spatialSystem = new GridSystem(_entityManager);
-            _hexGridSystem = new HexGridSystem(_entityManager, _spatialSystem);
-            _pathFinderSystem = new PathFinderSystem(_spatialSystem);
-            _unitSystem = new UnitSystem(_entityManager, _spatialSystem);
+            _gridManager = new GridManager(_entityManager);
+            _gridSystem = new GridSystem(_entityManager);
+            _hexGridSystem = new HexGridSystem(_entityManager, _gridSystem);
+            _pathFinderSystem = new PathFinderSystem(_gridSystem);
+            _unitSystem = new UnitSystem(_gridSystem);
 
-            _turnSystem = new TurnSystem(_entityManager);
+            _turnSystem = new TurnSystem(_gridSystem);
             // _debugSystem = new DebugSystem(_entityManager);
-            _tileHighlightSystem = new TileHighlightSystem(_entityManager);
+            _tileHighlightSystem = new TileHighlightSystem(_gridSystem);
 
-            var player = _unitSystem.CreatePlayer(Config.PlayerStart);
+            _unitSystem.CreatePlayer(Config.PlayerStart);
             _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
             _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
             _unitSystem.CreateGrunt(_hexGridSystem.GetRandomFloorTile());
@@ -85,10 +87,10 @@ namespace Game
 
         private List<Entity> GetAttackableEnemies(Vector3I position)
         {
-            return _entityManager.GetTilesInRange(position, 1)
-                .SelectMany(tile => tile.Get<OccupantsComponent>().Occupants)
-                .Where(entity => entity.Has<UnitTypeComponent>() &&
-                       entity.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
+            return _entityManager.GetUnitsInRange(position, 1)
+                .Where(entity =>
+                    entity.Has<UnitTypeComponent>() &&
+                    entity.Get<UnitTypeComponent>().UnitType == UnitType.Enemy)
                 .ToList();
         }
 
