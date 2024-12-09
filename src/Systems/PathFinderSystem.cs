@@ -7,21 +7,32 @@ namespace Game.Systems
     public class PathFinderSystem
     {
         private readonly AStar3D _astar = new();
-        private readonly GridSystem _spatialSystem;
-        private Dictionary<Vector3I, Entity> _tiles;
+        private readonly EntityManager _entityManager;
+        private Dictionary<Vector3I, Entity> _tiles = [];
 
-        public PathFinderSystem(GridSystem spatialSystem)
+        public PathFinderSystem(EntityManager entityManager)
         {
-            _spatialSystem = spatialSystem;
-            _tiles = [];
-            SetupPathfinding();
+            _entityManager = entityManager;
+            _astar.Clear();
+            _tiles = _entityManager
+                .GetTiles()
+                .ToDictionary(
+                    entity => entity.Get<TileComponent>().Coord,
+                    entity => entity
+                );
+            GD.Print(_tiles.Count);
         }
 
         public void SetupPathfinding()
         {
             _astar.Clear();
-            _tiles = _spatialSystem.GetTiles();
-
+            _tiles = _entityManager
+                .GetTiles()
+                .ToDictionary(
+                    entity => entity.Get<TileComponent>().Coord,
+                    entity => entity
+                );
+            GD.Print(_tiles.Count);
             AddPoints();
             ConnectPoints();
         }
@@ -30,10 +41,11 @@ namespace Game.Systems
         {
             foreach (var (coord, tile) in _tiles)
             {
-                if (tile.Get<HexTileComponent>().Type != TileType.Blocked)
+                var tileComponent = tile.Get<TileComponent>();
+                if (tileComponent.Type != TileType.Blocked)
                 {
-                    int index = tile.Get<HexTileComponent>().Index;
-                    _astar.AddPoint(index, tile.Get<RenderComponent>().Node3D.Position);
+                    int index = tileComponent.Index;
+                    _astar.AddPoint(index, tileComponent.Node.Position);
                 }
             }
         }
@@ -42,7 +54,7 @@ namespace Game.Systems
         {
             foreach (var (coord, tile) in _tiles)
             {
-                int currentIndex = tile.Get<HexTileComponent>().Index;
+                int currentIndex = tile.Get<TileComponent>().Index;
                 if (!_astar.HasPoint(currentIndex))
                     continue;
 
@@ -51,7 +63,7 @@ namespace Game.Systems
                     var neighborCoord = coord + dir;
                     if (_tiles.TryGetValue(neighborCoord, out var neighborTile))
                     {
-                        int neighborIndex = neighborTile.Get<HexTileComponent>().Index;
+                        int neighborIndex = neighborTile.Get<TileComponent>().Index;
                         if (_astar.HasPoint(neighborIndex) && !_astar.ArePointsConnected(currentIndex, neighborIndex))
                         {
                             _astar.ConnectPoints(currentIndex, neighborIndex);
@@ -66,8 +78,8 @@ namespace Game.Systems
             if (!_tiles.TryGetValue(from, out var fromTile) || !_tiles.TryGetValue(to, out var toTile))
                 return [];
 
-            int fromIndex = fromTile.Get<HexTileComponent>().Index;
-            int toIndex = toTile.Get<HexTileComponent>().Index;
+            int fromIndex = fromTile.Get<TileComponent>().Index;
+            int toIndex = toTile.Get<TileComponent>().Index;
 
             if (!_astar.HasPoint(fromIndex) || !_astar.HasPoint(toIndex))
                 return [];
@@ -110,7 +122,7 @@ namespace Game.Systems
                     var neighborCoord = current + dir;
                     if (_tiles.TryGetValue(neighborCoord, out var neighborTile) &&
                         !visited.Contains(neighborCoord) &&
-                        neighborTile.Get<HexTileComponent>().Type != TileType.Blocked)
+                        neighborTile.Get<TileComponent>().Type != TileType.Blocked)
                     {
                         visited.Add(neighborCoord);
                         queue.Enqueue((neighborCoord, distance + 1));

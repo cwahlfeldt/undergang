@@ -12,12 +12,12 @@ namespace Game.Autoload
         private const float DEFAULT_ROTATION_DURATION = 0.15f;
         private const Tween.TransitionType DEFAULT_TRANS_TYPE = Tween.TransitionType.Sine;
         private const Tween.EaseType DEFAULT_EASE_TYPE = Tween.EaseType.InOut;
-        private readonly Dictionary<Node, Tween> _activeTweens = new();
-        
+        private readonly Dictionary<Node, Tween> _activeTweens = [];
+
         public override void _Ready() => Instance = this;
-        
+
         public async Task MoveThrough(
-            Node3D target, 
+            Node3D target,
             List<Vector3> positions,
             float moveDuration = DEFAULT_MOVEMENT_DURATION,
             float rotationDuration = DEFAULT_ROTATION_DURATION)
@@ -33,7 +33,7 @@ namespace Game.Autoload
 
         private async Task MoveToNextPosition(
             Node3D target,
-            Queue<Vector3> remainingPositions, 
+            Queue<Vector3> remainingPositions,
             float moveDuration,
             float rotationDuration)
         {
@@ -50,7 +50,7 @@ namespace Game.Autoload
             }
 
             await LookAt(target, nextPosition, rotationDuration);
-            
+
             var moveTween = CreateTween();
             _activeTweens[target] = moveTween;
 
@@ -80,7 +80,7 @@ namespace Game.Autoload
             _activeTweens[target] = tween;
 
             var tcs = new TaskCompletionSource();
-            tween.Finished += () => 
+            tween.Finished += () =>
             {
                 _activeTweens.Remove(target);
                 tcs.SetResult();
@@ -96,7 +96,7 @@ namespace Game.Autoload
 
             await tcs.Task;
         }
-        
+
         public void StopAnimation(Node target)
         {
             if (_activeTweens.TryGetValue(target, out var tween))
@@ -105,7 +105,7 @@ namespace Game.Autoload
                 _activeTweens.Remove(target);
             }
         }
-        
+
         public void StopAllAnimations()
         {
             foreach (var tween in _activeTweens.Values)
@@ -114,7 +114,7 @@ namespace Game.Autoload
             }
             _activeTweens.Clear();
         }
-        
+
         public bool IsAnimating(Node target) => _activeTweens.ContainsKey(target);
     }
 }

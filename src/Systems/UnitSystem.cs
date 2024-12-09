@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,7 +34,7 @@ namespace Game.Systems
             }
 
             var oldCoord = entity.Get<HexCoordComponent>().Coord;
-            var oldTile = _entityManager.GetEntityByCoord(oldCoord);
+            var oldTile = _entityManager.GetAt(oldCoord);
             var oldOccupants = oldTile.Get<OccupantsComponent>().Occupants;
 
             // Create new occupants list without the moving entity
@@ -47,7 +48,7 @@ namespace Game.Systems
             await AnimationManager.Instance.MoveThrough(entityNode, locations);
 
             var newCoord = path.Last();
-            var newTile = _entityManager.GetEntityByCoord(newCoord);
+            var newTile = _entityManager.GetAt(newCoord);
             var newOccupants = newTile.Get<OccupantsComponent>().Occupants;
 
             // Create new occupants list with the moving entity added
@@ -55,6 +56,17 @@ namespace Game.Systems
 
             newTile.Update(new OccupantsComponent(updatedNewOccupants));
             entity.Update(new HexCoordComponent(newCoord));
+        }
+
+        public async Task MoveUnitTo(Entity entity, List<Vector3I> path)
+        {
+            var unitComponent = entity.Get<UnitComponent>();
+            var tileComponent = entity.Get<TileComponent>();
+            var locations = path.Select(HexGrid.HexToWorld).ToList();
+
+            await AnimationManager.Instance.MoveThrough(unitComponent.Node, locations);
+            // var from = entity;
+            // var to = _entityManager.GetAtCoord(coord);
         }
 
         public bool IsInAttackRange(Entity attacker, Vector3I position)
@@ -81,6 +93,30 @@ namespace Game.Systems
             }
 
             target.Update(new HealthComponent(newHealth));
+        }
+
+        public void SpwanPlayer(Vector3I coord)
+        {
+            var tile = _entityManager.GetAt(coord);
+            tile.Add(new UnitComponent(
+                new Node3D(),
+                $"Player_{Guid.NewGuid()}",
+                UnitType.Player,
+                3,
+                1
+            ));
+        }
+
+        public void SpawnGrunt(Vector3I coord)
+        {
+            var tile = _entityManager.GetAt(coord);
+            tile.Add(new UnitComponent(
+                new Node3D(),
+                $"Enemy_{Guid.NewGuid()}",
+                UnitType.Grunt,
+                1,
+                1
+            ));
         }
 
         public Entity CreatePlayer(Vector3I hexCoord)
@@ -124,10 +160,12 @@ namespace Game.Systems
             unit.Position = HexGrid.HexToWorld(hexCoord);
 
             // add occupant to tile
-            var tile = _entityManager.GetEntityByCoord(hexCoord);
+            var tile = _entityManager.GetAt(hexCoord);
             tile.Update(new OccupantsComponent([entity]));
+            var unitComponent = new UnitComponent(unit, name, unitType);
+            tile.Add(unitComponent);
 
-            _spatialSystem.RegisterUnit(hexCoord, entity);
+            // _spatialSystem.RegisterUnit(hexCoord, entity);
 
             return entity;
         }

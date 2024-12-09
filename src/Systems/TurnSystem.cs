@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Game.Autoload;
+using Godot;
 
 namespace Game.Systems
 {
@@ -17,23 +18,20 @@ namespace Game.Systems
             EventBus.Instance.UnitDefeated += OnUnitDefeated;
         }
 
-
         public void StartCombat()
         {
+            RefreshTurnQueue();
+        }
+
+        private void RefreshTurnQueue()
+        {
             _turnQueue.Clear();
-
-            // Add player first
             var player = _entityManager.GetPlayer();
-            if (player != null)
-                _turnQueue.Enqueue(player);
+            if (player != null) _turnQueue.Enqueue(player);
 
-            // Add all enemies
             foreach (var enemy in _entityManager.GetEnemies())
-            {
                 _turnQueue.Enqueue(enemy);
-            }
 
-            // Notify first turn
             if (CurrentUnit != null)
                 EventBus.Instance.OnTurnChanged(CurrentUnit);
         }
@@ -42,44 +40,25 @@ namespace Game.Systems
         {
             if (_turnQueue.Count > 0)
             {
-                var unit = _turnQueue.Dequeue();
+                _turnQueue.Dequeue();
 
-                // Only add back to queue if unit still exists
-                if (_entityManager.GetEntity(unit.Id) != null)
-                    _turnQueue.Enqueue(unit);
+                if (_turnQueue.Count == 0)
+                    RefreshTurnQueue();
 
-                // Notify next turn if there are units left
                 if (CurrentUnit != null)
                     EventBus.Instance.OnTurnChanged(CurrentUnit);
             }
         }
 
-        public void RemoveUnit(Entity unit)
-        {
-            // Create new queue without the removed unit
-            var newQueue = new Queue<Entity>();
-            while (_turnQueue.Count > 0)
-            {
-                var queuedUnit = _turnQueue.Dequeue();
-                if (queuedUnit.Id != unit.Id)
-                    newQueue.Enqueue(queuedUnit);
-            }
-            _turnQueue = newQueue;
-        }
+        public void RemoveUnit(Entity unit) =>
+            _turnQueue = new Queue<Entity>(_turnQueue.Where(u => u.Id != unit.Id));
 
-        public bool IsUnitTurn(Entity unit)
-        {
-            return CurrentUnit?.Id == unit.Id;
-        }
+        public bool IsUnitTurn(Entity unit) =>
+            CurrentUnit?.Id == unit.Id;
 
-        public bool OnlyPlayerRemains()
-        {
-            return _turnQueue.Count == 1 && _turnQueue.First().Get<UnitTypeComponent>().UnitType == UnitType.Player;
-        }
+        public bool OnlyPlayerRemains() =>
+            _turnQueue.Count == 1 && _turnQueue.Peek().Get<UnitTypeComponent>().UnitType == UnitType.Player;
 
-        private void OnUnitDefeated(Entity unit)
-        {
-            RemoveUnit(unit);
-        }
+        private void OnUnitDefeated(Entity unit) => RemoveUnit(unit);
     }
 }

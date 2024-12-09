@@ -1,10 +1,8 @@
 [gd_scene load_steps=2 format=3 uid="uid://dooip7hir4st8"]
 
-[ext_resource type="PackedScene" uid="uid://dhy30phrieo58" path="res://src/Scenes/Game.tscn" id="1_smeqa"]
+[ext_resource type="PackedScene" uid="uid://buekuqohkjb4l" path="res://src/Scenes/Board.tscn" id="1_fca0k"]
 
 [node name="Main" type="Node3D"]
-
-[node name="Game" parent="." instance=ExtResource("1_smeqa")]
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(0.965926, -0.166366, 0.198267, 0, 0.766044, 0.642788, -0.258819, -0.620885, 0.739942, 0, 13, 0)
@@ -15,3 +13,5 @@ size = 14.5
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.993896, -0.0955768, 0.0550994, -0.0221341, 0.316532, 0.948324, -0.108078, -0.943755, 0.312484, 0, 0, 0)
 shadow_enabled = true
+
+[node name="Board" parent="." instance=ExtResource("1_fca0k")]

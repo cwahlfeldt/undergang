@@ -7,10 +7,10 @@ namespace Game
     {
         public int Id { get; } = id;
         private readonly Dictionary<Type, object> _components = [];
-
         public T Get<T>() => (T)_components[typeof(T)];
         public bool Has<T>() => _components.ContainsKey(typeof(T));
         public void Add<T>(T component) => _components[typeof(T)] = component;
+        public void Remove<T>(T component) => _components.Remove(typeof(T));
         public void Update<T>(T newComponent) => _components[typeof(T)] = newComponent;
     }
 }

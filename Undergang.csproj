@@ -7,4 +7,7 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>Undergang</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Godot.DependencyInjection" Version="0.3.0" />
+  </ItemGroup>
 </Project>

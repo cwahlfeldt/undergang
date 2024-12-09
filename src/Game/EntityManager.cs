@@ -1,10 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Godot;
+// using Godot.DependencyInjection.Attributes;
+using Godot.DependencyInjection.Services.Input;
 
 namespace Game
 {
-    public class EntityManager(Node3D rootNode)
+    public partial class EntityManager(Node3D rootNode) : Node3D
     {
         private readonly Dictionary<int, Entity> _entities = [];
         private readonly Dictionary<Vector3I, Entity> _tiles = [];
@@ -50,25 +54,70 @@ namespace Game
 
         public Entity GetEntity(int id) => _entities[id];
 
-        public IEnumerable<Entity> GetEnemies() =>
-            Query<UnitTypeComponent>()
-                .Where(e => e.Get<UnitTypeComponent>().UnitType == UnitType.Enemy);
+        // public IEnumerable<Entity> GetEnemies() =>
+        //     Query<UnitTypeComponent>()
+        //         .Where(e => e.Get<UnitTypeComponent>().UnitType == UnitType.Enemy);
+
+        // public Entity GetPlayer() =>
+        //     Query<UnitTypeComponent>().FirstOrDefault(e =>
+        //         e.Get<UnitTypeComponent>().UnitType == UnitType.Player);
 
         public Entity GetPlayer() =>
-            Query<UnitTypeComponent>().FirstOrDefault(e =>
-                e.Get<UnitTypeComponent>().UnitType == UnitType.Player);
+            Query<UnitComponent>().FirstOrDefault(e =>
+                e.Get<UnitComponent>().Type == UnitType.Player);
+
+        public Tuple<Vector3I, Entity> GetPlayerP()
+        {
+            var entity = Query<UnitComponent>().FirstOrDefault(e =>
+                e.Get<UnitComponent>().Type == UnitType.Player);
+
+
+            return new Tuple<Vector3I, Entity>(entity.Get<TileComponent>().Coord, entity);
+        }
+
+
+        public IEnumerable<Entity> GetEnemies() =>
+            Query<UnitComponent>()
+                .Where(e => e.Get<UnitComponent>().Type == UnitType.Grunt);
+
+
+        // public IEnumerable<Entity> GetTiles() =>
+        //     Query<HexTileComponent, HexCoordComponent>();
+
+        public Entity GetRandTileEntity()
+        {
+            var rand = new Random();
+            var entities = Query<TileComponent>()
+                .Where(e =>
+                    !e.Has<UnitComponent>() &&
+                    !HexGrid.GetHexesInRange(Config.PlayerStart, 3).Contains(e.Get<TileComponent>().Coord) &&
+                    e.Get<TileComponent>().Type != TileType.Blocked);
+
+            return entities
+                .ElementAtOrDefault(rand.Next(0, entities.Count()));
+        }
 
         public IEnumerable<Entity> GetTiles() =>
-            Query<HexTileComponent, HexCoordComponent>();
+            Query<TileComponent>();
 
-        public Entity GetEntityByCoord(Vector3I hexCoord) =>
+        public Entity GetAt(Vector3I hexCoord) =>
             GetTiles().FirstOrDefault(e => e.Get<HexCoordComponent>().Coord == hexCoord);
+
+        public Entity GetAtCoord(Vector3I coord) =>
+            GetTiles().FirstOrDefault(e => e.Get<TileComponent>().Coord == coord);
+
 
         public IEnumerable<Entity> GetTilesInRange(Vector3I coord, int range) =>
             GetTiles()
                 .Where(e =>
                     HexGrid.GetHexesInRange(coord, range).Contains(e.Get<HexCoordComponent>().Coord) &&
                     e.Get<HexCoordComponent>().Coord != coord);
+
+        public IEnumerable<Entity> GetAllInRange(Vector3I coord, int range) =>
+            GetTiles()
+                .Where(e =>
+                    HexGrid.GetHexesInRange(coord, range).Contains(e.Get<TileComponent>().Coord) &&
+                    e.Get<TileComponent>().Coord != coord);
 
         public IEnumerable<Entity> GetTraversableTiles() =>
             GetTiles()

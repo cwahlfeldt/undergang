@@ -26,7 +26,7 @@ namespace Game
             _entityManager = new EntityManager(this);
             _spatialSystem = new GridSystem(_entityManager);
             _hexGridSystem = new HexGridSystem(_entityManager, _spatialSystem);
-            _pathFinderSystem = new PathFinderSystem(_spatialSystem);
+            _pathFinderSystem = new PathFinderSystem(_entityManager);
             _unitSystem = new UnitSystem(_entityManager, _spatialSystem);
 
             _turnSystem = new TurnSystem(_entityManager);
@@ -51,9 +51,9 @@ namespace Game
 
         private async void OnTileSelect(Entity tile)
         {
-            if (_playerActionInProgress) return;
-
             var player = _entityManager.GetPlayer();
+            if (_playerActionInProgress && !_turnSystem.IsUnitTurn(player)) return;
+
             var path = GetPathToTile(player, tile);
 
             if (path.Count > 0)
@@ -97,7 +97,7 @@ namespace Game
             var newAttackableTiles = _entityManager.GetTilesInRange(finalPosition, 1);
             foreach (var enemy in initialEnemies)
             {
-                var enemyTile = _entityManager.GetEntityByCoord(enemy.Get<HexCoordComponent>().Coord);
+                var enemyTile = _entityManager.GetAt(enemy.Get<HexCoordComponent>().Coord);
                 if (newAttackableTiles.Contains(enemyTile))
                 {
                     _unitSystem.AttackUnit(player, enemy);
@@ -110,7 +110,7 @@ namespace Game
             foreach (var enemy in _entityManager.GetEnemies())
             {
                 var enemyRange = _entityManager.GetTilesInRange(enemy.Get<HexCoordComponent>().Coord, 1);
-                var playerTile = _entityManager.GetEntityByCoord(player.Get<HexCoordComponent>().Coord);
+                var playerTile = _entityManager.GetAt(player.Get<HexCoordComponent>().Coord);
 
                 if (enemyRange.Contains(playerTile))
                 {
@@ -144,7 +144,7 @@ namespace Game
         private bool IsPlayerInAttackRange(Entity enemy, Entity player)
         {
             var attackableTiles = _entityManager.GetTilesInRange(enemy.Get<HexCoordComponent>().Coord, 1);
-            var playerTile = _entityManager.GetEntityByCoord(player.Get<HexCoordComponent>().Coord);
+            var playerTile = _entityManager.GetAt(player.Get<HexCoordComponent>().Coord);
             return attackableTiles.Contains(playerTile);
         }
 

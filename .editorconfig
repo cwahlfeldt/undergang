@@ -5,3 +5,9 @@ dotnet_style_namespace_match_folder = false
 
 # CA1050: Declare types in namespaces
 dotnet_diagnostic.CA1050.severity = none
+
+# CS9113: Parameter is unread.
+dotnet_diagnostic.CS9113.severity = none
+
+# CA1822: Mark members as static
+dotnet_diagnostic.CA1822.severity = none

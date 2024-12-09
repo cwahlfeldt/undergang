@@ -11,7 +11,7 @@ namespace Game.Systems
     {
         private const float HEX_SIZE = 1.05f;
         private readonly EntityManager _entityManager;
-        private readonly GridSystem _spatialSystem;
+        // private readonly GridSystem _spatialSystem;
         private Node3D _hexGridContainer;
         private Dictionary<Vector3I, Entity> _hexGrid = [];
         private readonly PackedScene _hexTileScene = ResourceLoader.Load<PackedScene>("res://src/Scenes/HexTile.tscn");
@@ -19,7 +19,7 @@ namespace Game.Systems
         public HexGridSystem(EntityManager entityManager, GridSystem spatialSystem, int radius = 5)
         {
             _entityManager = entityManager;
-            _spatialSystem = spatialSystem;
+            // _spatialSystem = spatialSystem;
             CreateHexGrid(radius);
         }
 
@@ -46,7 +46,7 @@ namespace Game.Systems
             {
                 var tileType = randBlockedTileIndices.Contains(index) && coord != Config.PlayerStart ? TileType.Blocked : TileType.Floor;
                 var entity = CreateTileEntity(coord, index, tileType);
-                _spatialSystem.RegisterTile(coord, entity);
+                // _spatialSystem.Register/Tile(coord, entity);
                 index++;
             }
 
