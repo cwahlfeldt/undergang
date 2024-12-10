@@ -23,10 +23,10 @@ namespace Game.Systems
 
             foreach (var tile in _entityManager.GetTiles())
             {
-                if (tile.Get<HexTileComponent>().Type == TileType.Blocked)
+                if (tile.Get<TileComponent>().Type == TileType.Blocked)
                     continue;
 
-                var hexCoord = tile.Get<HexCoordComponent>().Coord;
+                var hexCoord = tile.Get<TileComponent>().Coord;
                 var labelPos = HexGrid.HexToWorld(hexCoord);
 
                 var coordLabel = new Label3D

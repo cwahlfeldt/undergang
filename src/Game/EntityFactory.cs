@@ -51,7 +51,7 @@ namespace Game
 
         public void SpawnPlayer(Vector3I coord)
         {
-            var tile = _entityManager.GetAtCoord(coord);
+            var tile = _entityManager.GetAt(coord);
             tile.Add(new UnitComponent(
                 new Node3D(),
                 $"Player {Guid.NewGuid()}",
@@ -63,7 +63,7 @@ namespace Game
 
         public void SpawnGrunt(Vector3I coord)
         {
-            var tile = _entityManager.GetAtCoord(coord);
+            var tile = _entityManager.GetAt(coord);
             tile.Add(new UnitComponent(
                 new Node3D(),
                 $"Enemy {Guid.NewGuid()}",

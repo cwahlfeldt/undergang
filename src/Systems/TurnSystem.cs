@@ -27,7 +27,7 @@ namespace Game.Systems
         {
             _turnQueue.Clear();
             var player = _entityManager.GetPlayer();
-            if (player != null) _turnQueue.Enqueue(player);
+            if (player.entity != null) _turnQueue.Enqueue(player.entity);
 
             foreach (var enemy in _entityManager.GetEnemies())
                 _turnQueue.Enqueue(enemy);
@@ -57,7 +57,7 @@ namespace Game.Systems
             CurrentUnit?.Id == unit.Id;
 
         public bool OnlyPlayerRemains() =>
-            _turnQueue.Count == 1 && _turnQueue.Peek().Get<UnitTypeComponent>().UnitType == UnitType.Player;
+            _turnQueue.Count == 1 && _turnQueue.Peek().Get<UnitComponent>().Type == UnitType.Player;
 
         private void OnUnitDefeated(Entity unit) => RemoveUnit(unit);
     }

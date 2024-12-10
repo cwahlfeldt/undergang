@@ -7,7 +7,7 @@ namespace Game.Systems
     {
         private readonly EntityManager _entityManager;
         private Stack<Control> _hearts = [];
-        private Control _uiNode;
+        private readonly Control _uiNode;
         private const int HEART_SIZE = 32;
         private const int HEART_SPACING = 8;
 
@@ -16,7 +16,10 @@ namespace Game.Systems
             _entityManager = entityManager;
             _uiNode = _entityManager.GetRootNode().GetNode<Control>("UI/SubViewportContainer/SubViewport/Control");
 
-            var playerHealth = _entityManager.GetPlayer().Get<HealthComponent>().Health;
+            var player = _entityManager.GetPlayer();
+
+            var playerHealth = player.unit.Health;
+
             for (int i = 0; i < playerHealth; i++)
             {
                 AddHeart(i * (HEART_SIZE + HEART_SPACING));

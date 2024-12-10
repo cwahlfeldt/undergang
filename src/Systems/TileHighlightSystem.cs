@@ -33,7 +33,7 @@ namespace Game.Systems
 
         private void OnTurnChanged(Entity unit)
         {
-            if (unit.Get<UnitTypeComponent>().UnitType == UnitType.Player)
+            if (unit.Get<UnitComponent>().Type == UnitType.Player)
             {
                 SelectMoveRangeTiles(unit);
             }
@@ -42,7 +42,7 @@ namespace Game.Systems
         private void OnTileHover(Entity tile)
         {
             if (tile != null &&
-                tile.Get<HexTileComponent>().Type != TileType.Blocked &&
+                tile.Get<TileComponent>().Type != TileType.Blocked &&
                 tile != _selectedTile &&
                 !_highlightedTiles.Contains(tile))
             {
@@ -62,7 +62,7 @@ namespace Game.Systems
 
         private void OnTileSelect(Entity tile)
         {
-            if (tile.Get<HexTileComponent>().Type != TileType.Blocked)
+            if (tile.Get<TileComponent>().Type != TileType.Blocked)
             {
                 SelectTile(tile);
             }
@@ -85,7 +85,7 @@ namespace Game.Systems
             // Highlight neighboring tiles
             // var rangedTiles = HexGrid.GetHexesInRange(entity.Get<HexCoordComponent>().Coord, entity.Get<MoveRangeComponent>().MoveRange);
             var rangedTiles = _entityManager
-                .GetTilesInRange(entity.Get<HexCoordComponent>().Coord, entity.Get<MoveRangeComponent>().MoveRange);
+                .GetTilesInRange(entity.Get<TileComponent>().Coord, entity.Get<UnitComponent>().MoveRange);
             foreach (var tile in rangedTiles)
             {
                 if (tile != _selectedTile)
@@ -113,8 +113,8 @@ namespace Game.Systems
 
         private void SetTileMaterial(Entity tile, StandardMaterial3D material)
         {
-            var renderComponent = tile.Get<RenderComponent>();
-            if (renderComponent?.Node3D is Node3D node)
+            var tileNode = tile.Get<TileComponent>().Node;
+            if (tileNode is Node3D node)
             {
                 var mesh = node.GetNode<MeshInstance3D>("Mesh");
                 if (mesh != null)

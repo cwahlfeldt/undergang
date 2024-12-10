@@ -14,16 +14,10 @@ namespace Game.Systems
             var tileComponent = entity.Get<TileComponent>();
             var locations = path.Select(HexGrid.HexToWorld).ToList();
 
-            foreach (var location in path)
-            {
-                GD.Print(location);
-                GD.Print(HexGrid.HexToWorld(location));
-            }
-
             await AnimationManager.Instance.MoveThrough(unitComponent.Node, locations);
 
             var toCoord = path.Last();
-            var toEntity = _entityManager.GetAtCoord(toCoord);
+            var toEntity = _entityManager.GetAt(toCoord);
 
             entity.Remove(unitComponent);
             toEntity.Add(unitComponent);
