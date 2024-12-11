@@ -8,7 +8,7 @@ namespace Game.Autoload
     {
         public static AnimationManager Instance { get; private set; }
 
-        private const float DEFAULT_MOVEMENT_DURATION = 0.3f;
+        private const float DEFAULT_MOVEMENT_DURATION = 0.2f;
         private const float DEFAULT_ROTATION_DURATION = 0.15f;
         private const Tween.TransitionType DEFAULT_TRANS_TYPE = Tween.TransitionType.Sine;
         private const Tween.EaseType DEFAULT_EASE_TYPE = Tween.EaseType.InOut;
@@ -23,9 +23,7 @@ namespace Game.Autoload
             float rotationDuration = DEFAULT_ROTATION_DURATION)
         {
             if (positions == null || positions.Count == 0 || target == null)
-            {
                 return;
-            }
 
             StopAnimation(target);
             await MoveToNextPosition(target, new Queue<Vector3>(positions), moveDuration, rotationDuration);

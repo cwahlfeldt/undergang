@@ -9,15 +9,17 @@ namespace Game.Systems
     public class TileHighlightSystem
     {
         private readonly EntityManager _entityManager;
+        private readonly PathFinderSystem _pathFinderSystem;
         private readonly HashSet<Entity> _highlightedTiles = [];
         private readonly StandardMaterial3D _highlightMaterial;
         private readonly StandardMaterial3D _selectedMaterial;
         private readonly StandardMaterial3D _defaultMaterial;
         private Entity _selectedTile;
 
-        public TileHighlightSystem(EntityManager entityManager)
+        public TileHighlightSystem(EntityManager entityManager, PathFinderSystem pathFinderSystem)
         {
             _entityManager = entityManager;
+            _pathFinderSystem = pathFinderSystem;
 
             // Load shader materials
             _highlightMaterial = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileHighlight.tres");
@@ -25,48 +27,70 @@ namespace Game.Systems
             _defaultMaterial = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileBase.tres");
 
             // Subscribe to events
-            EventBus.Instance.TileSelect += OnTileSelect;
+            // EventBus.Instance.TileSelect += OnTileSelect;
             EventBus.Instance.TileHover += OnTileHover;
             EventBus.Instance.TileUnhover += OnTileUnhover;
-            EventBus.Instance.TurnChanged += OnTurnChanged;
+            // EventBus.Instance.TurnChanged += OnTurnChanged;
         }
 
-        private void OnTurnChanged(Entity unit)
-        {
-            if (unit.Get<UnitComponent>().Type == UnitType.Player)
-            {
-                SelectMoveRangeTiles(unit);
-            }
-        }
+        // private void OnTurnChanged(Entity unit)
+        // {
+        //     if (unit.Get<UnitComponent>().Type == UnitType.Player)
+        //     {
+        //         SelectMoveRangeTiles(unit);
+        //     }
+        // }
 
         private void OnTileHover(Entity tile)
         {
             if (tile != null &&
-                tile.Get<TileComponent>().Type != TileType.Blocked &&
                 tile != _selectedTile &&
                 !_highlightedTiles.Contains(tile))
             {
-                SetTileMaterial(tile, _highlightMaterial);
+                var player = _entityManager.GetPlayer();
+                var path = _pathFinderSystem.FindPath(player.coord, tile.Get<TileComponent>().Coord, -1);
+
+                if (path.Count > 0)
+                {
+                    // Clear previous highlights first
+                    ClearHighlightedTiles();
+
+                    // Highlight new tiles and add them to tracking
+                    foreach (Vector3I t in path)
+                    {
+                        var tileTile = _entityManager.GetAt(t);
+                        SetTileMaterial(tileTile, _highlightMaterial);
+                        _highlightedTiles.Add(tileTile); // Add to tracking
+                    }
+                }
             }
         }
 
         private void OnTileUnhover(Entity tile)
         {
             if (tile != null &&
-                tile != _selectedTile &&
-                !_highlightedTiles.Contains(tile))
+                tile != _selectedTile)
             {
-                SetTileMaterial(tile, _defaultMaterial);
+                ClearHighlightedTiles();
             }
         }
 
-        private void OnTileSelect(Entity tile)
+        private void ClearHighlightedTiles()
         {
-            if (tile.Get<TileComponent>().Type != TileType.Blocked)
+            foreach (Entity t in _highlightedTiles)
             {
-                SelectTile(tile);
+                SetTileMaterial(t, _defaultMaterial);
             }
+            _highlightedTiles.Clear(); // Clear the tracking list
         }
+
+        // private void OnTileSelect(Entity tile)
+        // {
+        //     if (tile.Get<TileComponent>().Type != TileType.Blocked)
+        //     {
+        //         SelectTile(tile);
+        //     }
+        // }
 
         public async void SelectTile(Entity entity)
         {
@@ -77,24 +101,24 @@ namespace Game.Systems
             ClearSelection();
         }
 
-        private void SelectMoveRangeTiles(Entity entity)
-        {
-            ClearSelection();
-            var moveRangeMat = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileMoveRange.tres");
+        // private void SelectMoveRangeTiles(Entity entity)
+        // {
+        //     ClearSelection();
+        //     var moveRangeMat = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileMoveRange.tres");
 
-            // Highlight neighboring tiles
-            // var rangedTiles = HexGrid.GetHexesInRange(entity.Get<HexCoordComponent>().Coord, entity.Get<MoveRangeComponent>().MoveRange);
-            var rangedTiles = _entityManager
-                .GetTilesInRange(entity.Get<TileComponent>().Coord, entity.Get<UnitComponent>().MoveRange);
-            foreach (var tile in rangedTiles)
-            {
-                if (tile != _selectedTile)
-                {
-                    _highlightedTiles.Add(tile);
-                    SetTileMaterial(tile, moveRangeMat);
-                }
-            }
-        }
+        //     // Highlight neighboring tiles
+        //     // var rangedTiles = HexGrid.GetHexesInRange(entity.Get<HexCoordComponent>().Coord, entity.Get<MoveRangeComponent>().MoveRange);
+        //     var rangedTiles = _entityManager
+        //         .GetTilesInRange(entity.Get<TileComponent>().Coord, entity.Get<UnitComponent>().MoveRange);
+        //     foreach (var tile in rangedTiles)
+        //     {
+        //         if (tile != _selectedTile)
+        //         {
+        //             _highlightedTiles.Add(tile);
+        //             SetTileMaterial(tile, moveRangeMat);
+        //         }
+        //     }
+        // }
 
         private void ClearSelection()
         {
@@ -126,7 +150,7 @@ namespace Game.Systems
 
         public void Cleanup()
         {
-            EventBus.Instance.TileSelect -= OnTileSelect;
+            // EventBus.Instance.TileSelect -= OnTileSelect;
             EventBus.Instance.TileHover -= OnTileHover;
             EventBus.Instance.TileUnhover -= OnTileUnhover;
             ClearSelection();

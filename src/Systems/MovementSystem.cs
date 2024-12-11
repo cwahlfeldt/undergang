@@ -16,11 +16,14 @@ namespace Game.Systems
 
             await AnimationManager.Instance.MoveThrough(unitComponent.Node, locations);
 
+            var fromCoord = path.First();
             var toCoord = path.Last();
             var toEntity = _entityManager.GetAt(toCoord);
 
             entity.Remove(unitComponent);
             toEntity.Add(unitComponent);
+
+            EventBus.Instance.OnMoveCompleted(toEntity, fromCoord, toCoord);
 
             return toEntity;
         }

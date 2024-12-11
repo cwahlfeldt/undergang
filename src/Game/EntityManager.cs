@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Godot;
-// using Godot.DependencyInjection.Attributes;
-using Godot.DependencyInjection.Services.Input;
 
 namespace Game
 {
@@ -60,14 +57,14 @@ namespace Game
         public Entity GetRandTileEntity()
         {
             var rand = new Random();
-            var entities = Query<TileComponent>()
+            var entitiesAwayFromPlayer = Query<TileComponent>()
                 .Where(e =>
                     !e.Has<UnitComponent>() &&
                     !HexGrid.GetHexesInRange(Config.PlayerStart, 3).Contains(e.Get<TileComponent>().Coord) &&
                     e.Get<TileComponent>().Type != TileType.Blocked);
 
-            return entities
-                .ElementAtOrDefault(rand.Next(0, entities.Count()));
+            return entitiesAwayFromPlayer
+            .ElementAtOrDefault(rand.Next(0, entitiesAwayFromPlayer.Count()));
         }
 
         public IEnumerable<Entity> GetTiles() =>
@@ -75,6 +72,12 @@ namespace Game
 
         public Entity GetAt(Vector3I coord) =>
             GetTiles().FirstOrDefault(e => e.Get<TileComponent>().Coord == coord);
+
+        public bool IsTileOccupied(Vector3I coord)
+        {
+            var tile = GetAt(coord);
+            return tile != null && tile.Has<UnitComponent>();
+        }
 
         public IEnumerable<Entity> GetTilesInRange(Vector3I coord, int range) =>
             GetTiles()

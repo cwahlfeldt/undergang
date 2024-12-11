@@ -10,6 +10,20 @@ namespace Game
 {
     public partial class BoardManager : Node3D
     {
+        private bool _enablePathfinderDebug = true;
+        [Export]
+        public bool EnablePathfinderDebug
+        {
+            get => _enablePathfinderDebug;
+            set
+            {
+                _debugSystem.TogglePathfindingDebug();
+                _enablePathfinderDebug = value;
+            }
+        }
+
+        [Export] public bool _enableHexCoordDebug = false;
+
         private EntityManager _entityManager;
         private EntityFactory _entityFactory;
         private RenderSystem _renderSystem;
@@ -17,6 +31,8 @@ namespace Game
         private TurnSystem _turnSystem;
         private MovementSystem _movementSystem;
         private UISystem _uiSystem;
+        private DebugSystem _debugSystem;
+        private TileHighlightSystem _tileHighlightSystem;
         private bool _playerActionInProgress = false;
 
         public override void _Ready()
@@ -41,6 +57,12 @@ namespace Game
             _renderSystem.RenderBoard();
             _pathFinderSystem.SetupPathfinding();
             _turnSystem.StartCombat();
+
+            _debugSystem = new DebugSystem(_entityManager, _pathFinderSystem);
+            if (_enablePathfinderDebug)
+                _debugSystem.TogglePathfindingDebug();
+
+            _tileHighlightSystem = new TileHighlightSystem(_entityManager, _pathFinderSystem);
         }
 
         private void SetupEventHandlers()
@@ -55,6 +77,8 @@ namespace Game
                 return;
 
             var player = _entityManager.GetPlayer();
+            if (entity.Get<TileComponent>().Coord == player.coord)
+                return;
             if (!_turnSystem.IsUnitTurn(player.entity))
                 return;
 
@@ -160,13 +184,13 @@ namespace Game
 
         private async Task ProcessEnemyTurn(Entity enemy)
         {
-            var (_, _, entity) = _entityManager.GetPlayer();
+            var (_, _, player) = _entityManager.GetPlayer();
 
-            if (entity == null)
+            if (player == null)
                 return;
 
-            if (!IsPlayerInAttackRange(enemy, entity))
-                await MoveEnemyTowardsPlayer(enemy, entity);
+            if (!IsPlayerInAttackRange(enemy, player))
+                await MoveEnemyTowardsPlayer(enemy, player);
 
             _turnSystem.EndTurn();
         }
@@ -195,4 +219,3 @@ namespace Game
 
     }
 }
-

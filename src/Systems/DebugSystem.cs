@@ -1,25 +1,146 @@
 using Godot;
+using Game.Autoload;
 
 namespace Game.Systems
 {
     public class DebugSystem
     {
         private readonly EntityManager _entityManager;
+        private readonly PathFinderSystem _pathFinderSystem;
+        private Node3D _debugNode;
+        private Node3D _pathfindingNode;
+        private bool _showPathfinding = false;
 
-        public DebugSystem(EntityManager entityManager)
+        public DebugSystem(EntityManager entityManager, PathFinderSystem pathFinderSystem)
         {
             _entityManager = entityManager;
-            ShowHexCoordLabels();
+            _pathFinderSystem = pathFinderSystem;
+
+            SetupDebugNodes();
+            // ShowHexCoordLabels();
+            // TogglePathfindingDebug();
+            EventBus.Instance.MoveCompleted += OnMoveCompleted;
+        }
+
+        private void OnMoveCompleted(Entity entity, Vector3I from, Vector3I to)
+        {
+            if (_showPathfinding)
+                UpdatePathfindingDebug();
+        }
+
+        private void SetupDebugNodes()
+        {
+            _pathfindingNode = new Node3D { Name = "Pathfinding Debug", Position = new Vector3(0.2f, 0.4f, 0.9f) };
+            _debugNode = new Node3D { Name = "Debug System" };
+            _entityManager.GetRootNode().AddChild(_debugNode);
+            _debugNode.AddChild(_pathfindingNode);
+        }
+
+        public void TogglePathfindingDebug()
+        {
+            _showPathfinding = !_showPathfinding;
+            _pathfindingNode.Visible = _showPathfinding;
+
+            if (_showPathfinding)
+                UpdatePathfindingDebug();
+            else
+                ClearPathfindingDebug();
+        }
+
+        private void UpdatePathfindingDebug()
+        {
+            ClearPathfindingDebug();
+
+            // Draw nodes
+            foreach (var tile in _entityManager.GetTiles())
+            {
+                var coord = tile.Get<TileComponent>().Coord;
+                var worldPos = HexGrid.HexToWorld(coord);
+
+                // Create node visualization
+                var nodeMarker = CreateNodeMarker(worldPos, _entityManager.IsTileOccupied(coord));
+                if (tile.Get<TileComponent>().Type != TileType.Blocked)
+                    _pathfindingNode.AddChild(nodeMarker);
+            }
+
+            // Draw connections
+            foreach (var tile in _entityManager.GetTiles())
+            {
+                var coord = tile.Get<TileComponent>().Coord;
+                var worldPos = HexGrid.HexToWorld(coord);
+
+                foreach (var dir in HexGrid.Directions.Values)
+                {
+                    var neighborCoord = coord + dir;
+                    if (_pathFinderSystem.HasConnection(coord, neighborCoord))
+                    {
+                        var neighborWorldPos = HexGrid.HexToWorld(neighborCoord);
+                        var connection = CreateConnectionLine(worldPos, neighborWorldPos);
+                        _pathfindingNode.AddChild(connection);
+                    }
+                }
+            }
+        }
+
+        private Node3D CreateNodeMarker(Vector3 position, bool isOccupied)
+        {
+            var marker = new CsgSphere3D
+            {
+                Radius = 0.2f,
+                Position = new Vector3(position.X, 0.5f, position.Z),
+                Material = new StandardMaterial3D
+                {
+                    AlbedoColor = isOccupied ? Colors.Red : Colors.Green,
+                    Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                }
+            };
+
+            return marker;
+        }
+
+        private Node3D CreateConnectionLine(Vector3 from, Vector3 to)
+        {
+            var line = new MeshInstance3D();
+            var immediateGeometry = new ImmediateMesh();
+
+            var material = new StandardMaterial3D
+            {
+                AlbedoColor = Colors.Blue,
+                Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            };
+
+            immediateGeometry.SurfaceBegin(Mesh.PrimitiveType.Lines);
+            immediateGeometry.SurfaceAddVertex(new Vector3(from.X, 0.5f, from.Z));
+            immediateGeometry.SurfaceAddVertex(new Vector3(to.X, 0.5f, to.Z));
+            immediateGeometry.SurfaceEnd();
+
+            line.Mesh = immediateGeometry;
+            line.MaterialOverride = material;
+
+            return line;
+        }
+
+        private void ClearPathfindingDebug()
+        {
+            foreach (Node child in _pathfindingNode.GetChildren())
+            {
+                child.QueueFree();
+            }
+        }
+
+        public void Cleanup()
+        {
+            EventBus.Instance.MoveCompleted -= OnMoveCompleted;
         }
 
         private void ShowHexCoordLabels()
         {
             var debugNode = new Node3D
             {
-                Name = "Debug System",
+                Name = "Coords Debug",
                 Position = new Vector3(0.105f, -0.6f, 0.375f)
             };
-            _entityManager.GetRootNode().AddChild(debugNode);
+            _debugNode.AddChild(debugNode);
 
             foreach (var tile in _entityManager.GetTiles())
             {
