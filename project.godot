@@ -17,8 +17,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-EventBus="*res://src/Autoload/EventBus.cs"
-AnimationManager="*res://src/Autoload/AnimationManager.cs"
+_Events_="*res://src/Services/Events.cs"
+_Tweener_="*res://src/Services/Tweener.cs"
 
 [dotnet]
 

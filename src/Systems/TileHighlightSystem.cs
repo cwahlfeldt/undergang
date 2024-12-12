@@ -1,25 +1,20 @@
 using System.Collections.Generic;
 using Godot;
-using Game.Autoload;
 using System.Threading.Tasks;
 using System;
 
-namespace Game.Systems
+namespace Game
 {
-    public class TileHighlightSystem
+    public class TileHighlightSystem : System
     {
-        private readonly EntityManager _entityManager;
-        private readonly PathFinderSystem _pathFinderSystem;
-        private readonly HashSet<Entity> _highlightedTiles = [];
-        private readonly StandardMaterial3D _highlightMaterial;
-        private readonly StandardMaterial3D _selectedMaterial;
-        private readonly StandardMaterial3D _defaultMaterial;
+        private HashSet<Entity> _highlightedTiles = [];
+        private StandardMaterial3D _highlightMaterial;
+        private StandardMaterial3D _selectedMaterial;
+        private StandardMaterial3D _defaultMaterial;
         private Entity _selectedTile;
 
-        public TileHighlightSystem(EntityManager entityManager, PathFinderSystem pathFinderSystem)
+        public override void Initialize()
         {
-            _entityManager = entityManager;
-            _pathFinderSystem = pathFinderSystem;
 
             // Load shader materials
             _highlightMaterial = ResourceLoader.Load<StandardMaterial3D>("res://assets/materials/HexTileHighlight.tres");
@@ -28,8 +23,8 @@ namespace Game.Systems
 
             // Subscribe to events
             // EventBus.Instance.TileSelect += OnTileSelect;
-            EventBus.Instance.TileHover += OnTileHover;
-            EventBus.Instance.TileUnhover += OnTileUnhover;
+            Events.TileHover += OnTileHover;
+            Events.TileUnhover += OnTileUnhover;
             // EventBus.Instance.TurnChanged += OnTurnChanged;
         }
 
@@ -47,8 +42,8 @@ namespace Game.Systems
                 tile != _selectedTile &&
                 !_highlightedTiles.Contains(tile))
             {
-                var player = _entityManager.GetPlayer();
-                var path = _pathFinderSystem.FindPath(player.coord, tile.Get<TileComponent>().Coord, -1);
+                var player = Entities.GetPlayer();
+                var path = Systems.Get<PathFinderSystem>().FindPath(player.coord, tile.Get<TileComponent>().Coord, -1);
 
                 if (path.Count > 0)
                 {
@@ -58,7 +53,7 @@ namespace Game.Systems
                     // Highlight new tiles and add them to tracking
                     foreach (Vector3I t in path)
                     {
-                        var tileTile = _entityManager.GetAt(t);
+                        var tileTile = Entities.GetAt(t);
                         SetTileMaterial(tileTile, _highlightMaterial);
                         _highlightedTiles.Add(tileTile); // Add to tracking
                     }
@@ -108,7 +103,7 @@ namespace Game.Systems
 
         //     // Highlight neighboring tiles
         //     // var rangedTiles = HexGrid.GetHexesInRange(entity.Get<HexCoordComponent>().Coord, entity.Get<MoveRangeComponent>().MoveRange);
-        //     var rangedTiles = _entityManager
+        //     var rangedTiles = Entities
         //         .GetTilesInRange(entity.Get<TileComponent>().Coord, entity.Get<UnitComponent>().MoveRange);
         //     foreach (var tile in rangedTiles)
         //     {
@@ -148,11 +143,11 @@ namespace Game.Systems
             }
         }
 
-        public void Cleanup()
+        public override void Cleanup()
         {
             // EventBus.Instance.TileSelect -= OnTileSelect;
-            EventBus.Instance.TileHover -= OnTileHover;
-            EventBus.Instance.TileUnhover -= OnTileUnhover;
+            Events.TileHover -= OnTileHover;
+            Events.TileUnhover -= OnTileUnhover;
             ClearSelection();
         }
     }

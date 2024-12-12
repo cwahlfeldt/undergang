@@ -1,9 +1,9 @@
 [gd_scene load_steps=2 format=3 uid="uid://buekuqohkjb4l"]
 
-[ext_resource type="Script" path="res://src/Game/BoardManager.cs" id="1_tlqri"]
+[ext_resource type="Script" path="res://src/Game/GameManager.cs" id="1_ornnt"]
 
-[node name="Board" type="Node3D"]
-script = ExtResource("1_tlqri")
+[node name="GameManager" type="Node3D"]
+script = ExtResource("1_ornnt")
 
 [node name="UI" type="Node3D" parent="."]
 

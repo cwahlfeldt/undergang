@@ -2,18 +2,16 @@ using Godot;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Game.Autoload
+namespace Game
 {
-    public partial class AnimationManager : Node
+    public partial class Tweener : Node, ISystem
     {
-        public static AnimationManager Instance { get; private set; }
-
+        public static Tweener Instance { get; private set; }
         private const float DEFAULT_MOVEMENT_DURATION = 0.2f;
         private const float DEFAULT_ROTATION_DURATION = 0.15f;
         private const Tween.TransitionType DEFAULT_TRANS_TYPE = Tween.TransitionType.Sine;
         private const Tween.EaseType DEFAULT_EASE_TYPE = Tween.EaseType.InOut;
         private readonly Dictionary<Node, Tween> _activeTweens = [];
-
         public override void _Ready() => Instance = this;
 
         public async Task MoveThrough(

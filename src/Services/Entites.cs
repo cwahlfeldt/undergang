@@ -5,11 +5,9 @@ using Godot;
 
 namespace Game
 {
-    public partial class EntityManager(Node3D rootNode) : Node3D
+    public partial class Entities(Node3D rootNode) : Node3D, ISystem
     {
         private readonly Dictionary<int, Entity> _entities = [];
-        private readonly Dictionary<Vector3I, Entity> _tiles = [];
-        private readonly Dictionary<Vector3I, Entity> _units = [];
         private int _nextId = 0;
         private readonly Node3D _rootNode = rootNode;
 
@@ -93,5 +91,65 @@ namespace Game
             _entities.Values.Where(e =>
                 e.Has<T1>() &&
                 e.Has<T2>());
+
+        public IEnumerable<Entity> CreateGrid(int radius, int blockedTilesAmt = 16)
+        {
+            // Generate the coordinates
+            var coordinates = HexGrid.GenerateHexCoordinates(radius);
+            var randBlockedTileIndices = Utils.GenerateRandomIntArray(blockedTilesAmt);
+
+            // Create tile entities
+            var entities = new List<Entity>();
+            var index = 0;
+            foreach (var coord in coordinates)
+            {
+                var tileType = randBlockedTileIndices.Contains(index) && coord != Config.PlayerStart ? TileType.Blocked : TileType.Floor;
+                var entity = CreateTileEntity(coord, index, tileType);
+                entities.Add(entity);
+                index++;
+            }
+
+            return entities;
+        }
+
+        private Entity CreateTileEntity(Vector3I hexCoord, int index, TileType tileType)
+        {
+            var tileEntity = new Entity(GetNextId());
+
+            tileEntity.Add(new TileComponent(
+                new Node3D(),
+                $"Tile {hexCoord} {index}",
+                hexCoord,
+                tileType,
+                index
+            ));
+
+            AddEntity(tileEntity);
+            return tileEntity;
+        }
+
+        public void SpawnPlayer()
+        {
+            var tile = GetAt(Config.PlayerStart);
+            tile.Add(new UnitComponent(
+                Node: new Node3D(),
+                Name: $"Player {Guid.NewGuid()}",
+                Type: UnitType.Player,
+                Health: 3,
+                MoveRange: 1
+            ));
+        }
+
+        public void SpawnGrunt()
+        {
+            var tile = GetAt(GetRandTileEntity().Get<TileComponent>().Coord);
+            tile.Add(new UnitComponent(
+                Node: new Node3D(),
+                Name: $"Enemy {Guid.NewGuid()}",
+                Type: UnitType.Grunt,
+                Health: 1,
+                MoveRange: 1
+            ));
+        }
     }
 }

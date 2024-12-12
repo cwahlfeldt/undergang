@@ -1,22 +1,20 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace Game.Systems
+namespace Game
 {
-    public class UISystem
+    public class UISystem : System
     {
-        private readonly EntityManager _entityManager;
         private Stack<Control> _hearts = [];
-        private readonly Control _uiNode;
+        private Control _uiNode;
         private const int HEART_SIZE = 32;
         private const int HEART_SPACING = 8;
 
-        public UISystem(EntityManager entityManager)
+        public override void Initialize()
         {
-            _entityManager = entityManager;
-            _uiNode = _entityManager.GetRootNode().GetNode<Control>("UI/SubViewportContainer/SubViewport/Control");
+            _uiNode = Entities.GetRootNode().GetNode<Control>("UI/SubViewportContainer/SubViewport/Control");
 
-            var player = _entityManager.GetPlayer();
+            var player = Entities.GetPlayer();
 
             var playerHealth = player.unit.Health;
 

@@ -1,39 +1,30 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Game.Autoload;
-using Godot;
 
-namespace Game.Systems
+namespace Game
 {
-    public class TurnSystem
+    public class TurnSystem : System
     {
         private Queue<Entity> _turnQueue = new();
-        private readonly EntityManager _entityManager;
         public Entity CurrentUnit => _turnQueue.Count > 0 ? _turnQueue.Peek() : null;
 
-        public TurnSystem(EntityManager entityManager)
+        public override void Initialize()
         {
-            _entityManager = entityManager;
-            EventBus.Instance.UnitDefeated += OnUnitDefeated;
-        }
-
-        public void StartCombat()
-        {
+            Events.UnitDefeated += OnUnitDefeated;
             RefreshTurnQueue();
         }
 
         private void RefreshTurnQueue()
         {
             _turnQueue.Clear();
-            var player = _entityManager.GetPlayer();
+            var player = Entities.GetPlayer();
             if (player.entity != null) _turnQueue.Enqueue(player.entity);
 
-            foreach (var enemy in _entityManager.GetEnemies())
+            foreach (var enemy in Entities.GetEnemies())
                 _turnQueue.Enqueue(enemy);
 
             if (CurrentUnit != null)
-                EventBus.Instance.OnTurnChanged(CurrentUnit);
+                Events.OnTurnChanged(CurrentUnit);
         }
 
         public void EndTurn()
@@ -46,7 +37,7 @@ namespace Game.Systems
                     RefreshTurnQueue();
 
                 if (CurrentUnit != null)
-                    EventBus.Instance.OnTurnChanged(CurrentUnit);
+                    Events.OnTurnChanged(CurrentUnit);
             }
         }
 

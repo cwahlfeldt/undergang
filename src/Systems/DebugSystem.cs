@@ -1,25 +1,21 @@
 using Godot;
-using Game.Autoload;
 
-namespace Game.Systems
+namespace Game
 {
-    public class DebugSystem
+    public class DebugSystem : System
     {
-        private readonly EntityManager _entityManager;
-        private readonly PathFinderSystem _pathFinderSystem;
+        private PathFinderSystem _pathFinderSystem;
         private Node3D _debugNode;
         private Node3D _pathfindingNode;
         private bool _showPathfinding = false;
 
-        public DebugSystem(EntityManager entityManager, PathFinderSystem pathFinderSystem)
+        public override void Initialize()
         {
-            _entityManager = entityManager;
-            _pathFinderSystem = pathFinderSystem;
+            _pathFinderSystem = Systems.Get<PathFinderSystem>();
 
             SetupDebugNodes();
-            // ShowHexCoordLabels();
-            // TogglePathfindingDebug();
-            EventBus.Instance.MoveCompleted += OnMoveCompleted;
+            TogglePathfindingDebug();
+            Events.MoveCompleted += OnMoveCompleted;
         }
 
         private void OnMoveCompleted(Entity entity, Vector3I from, Vector3I to)
@@ -32,7 +28,7 @@ namespace Game.Systems
         {
             _pathfindingNode = new Node3D { Name = "Pathfinding Debug", Position = new Vector3(0.2f, 0.4f, 0.9f) };
             _debugNode = new Node3D { Name = "Debug System" };
-            _entityManager.GetRootNode().AddChild(_debugNode);
+            Entities.GetRootNode().AddChild(_debugNode);
             _debugNode.AddChild(_pathfindingNode);
         }
 
@@ -52,19 +48,19 @@ namespace Game.Systems
             ClearPathfindingDebug();
 
             // Draw nodes
-            foreach (var tile in _entityManager.GetTiles())
+            foreach (var tile in Entities.GetTiles())
             {
                 var coord = tile.Get<TileComponent>().Coord;
                 var worldPos = HexGrid.HexToWorld(coord);
 
                 // Create node visualization
-                var nodeMarker = CreateNodeMarker(worldPos, _entityManager.IsTileOccupied(coord));
+                var nodeMarker = CreateNodeMarker(worldPos, Entities.IsTileOccupied(coord));
                 if (tile.Get<TileComponent>().Type != TileType.Blocked)
                     _pathfindingNode.AddChild(nodeMarker);
             }
 
             // Draw connections
-            foreach (var tile in _entityManager.GetTiles())
+            foreach (var tile in Entities.GetTiles())
             {
                 var coord = tile.Get<TileComponent>().Coord;
                 var worldPos = HexGrid.HexToWorld(coord);
@@ -128,9 +124,9 @@ namespace Game.Systems
             }
         }
 
-        public void Cleanup()
+        public override void Cleanup()
         {
-            EventBus.Instance.MoveCompleted -= OnMoveCompleted;
+            Events.MoveCompleted -= OnMoveCompleted;
         }
 
         private void ShowHexCoordLabels()
@@ -142,7 +138,7 @@ namespace Game.Systems
             };
             _debugNode.AddChild(debugNode);
 
-            foreach (var tile in _entityManager.GetTiles())
+            foreach (var tile in Entities.GetTiles())
             {
                 if (tile.Get<TileComponent>().Type == TileType.Blocked)
                     continue;

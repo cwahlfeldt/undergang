@@ -1,9 +1,9 @@
 using System;
 using Godot;
 
-namespace Game.Autoload
+namespace Game
 {
-    public partial class EventBus : Node
+    public partial class Events : Node, ISystem
     {
         public event Action<Entity> UnitDefeated;
         public event Action<Entity, Vector3I, Vector3I> MoveCompleted;
@@ -16,7 +16,7 @@ namespace Game.Autoload
         public event Action<Entity> UnitUnhover;
         public event Action<Type, object> OnComponentChanged;
 
-        public static EventBus Instance { get; private set; }
+        public static Events Instance { get; private set; }
 
         public override void _Ready()
         {

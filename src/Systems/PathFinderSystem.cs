@@ -1,27 +1,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
-using Game.Autoload;
 
-namespace Game.Systems
+namespace Game
 {
-    public class PathFinderSystem
+    public class PathFinderSystem : System
     {
         private readonly AStar3D _astar = new();
-        private readonly EntityManager _entityManager;
         private Dictionary<Vector3I, Entity> _tiles = [];
 
-        public PathFinderSystem(EntityManager entityManager)
+        public override void Initialize()
         {
-            EventBus.Instance.MoveCompleted += OnMoveCompleted;
-            _entityManager = entityManager;
+            Events.MoveCompleted += OnMoveCompleted;
+            Events.UnitDefeated += OnUnitDefeated;
+
             SetupPathfinding();
         }
 
         public void SetupPathfinding()
         {
             _astar.Clear();
-            _tiles = _entityManager
+            _tiles = Entities
                 .GetTiles()
                 .ToDictionary(
                     entity => entity.Get<TileComponent>().Coord,
@@ -30,6 +29,25 @@ namespace Game.Systems
 
             AddPoints();
             ConnectPoints();
+        }
+
+        public List<Vector3I> FindPath(Vector3I from, Vector3I to, int maxRange)
+        {
+            if (!_tiles.TryGetValue(from, out var fromTile) || !_tiles.TryGetValue(to, out var toTile))
+                return [];
+
+            int fromIndex = fromTile.Get<TileComponent>().Index;
+            int toIndex = toTile.Get<TileComponent>().Index;
+
+            if (!_astar.HasPoint(fromIndex) || !_astar.HasPoint(toIndex))
+                return [];
+
+            var path = _astar.GetPointPath(fromIndex, toIndex);
+            if (path == null || path.Length == 0)
+                return [];
+
+            var coordPath = path.Select(worldPos => HexGrid.WorldToHex(worldPos)).ToList();
+            return maxRange > 0 ? coordPath.Take(maxRange + 1).ToList() : coordPath;
         }
 
         private void AddPoints()
@@ -58,7 +76,7 @@ namespace Game.Systems
                     var neighborCoord = coord + dir;
                     if (_tiles.TryGetValue(neighborCoord, out var neighborTile))
                     {
-                        if (_entityManager.IsTileOccupied(neighborCoord))
+                        if (Entities.IsTileOccupied(neighborCoord))
                             continue;
 
                         int neighborIndex = neighborTile.Get<TileComponent>().Index;
@@ -69,65 +87,6 @@ namespace Game.Systems
                     }
                 }
             }
-        }
-
-        public List<Vector3I> FindPath(Vector3I from, Vector3I to, int maxRange)
-        {
-            if (!_tiles.TryGetValue(from, out var fromTile) || !_tiles.TryGetValue(to, out var toTile))
-                return [];
-
-            int fromIndex = fromTile.Get<TileComponent>().Index;
-            int toIndex = toTile.Get<TileComponent>().Index;
-
-            if (!_astar.HasPoint(fromIndex) || !_astar.HasPoint(toIndex))
-                return [];
-
-            var path = _astar.GetPointPath(fromIndex, toIndex);
-            if (path == null || path.Length == 0)
-                return [];
-
-            var coordPath = path.Select(worldPos => HexGrid.WorldToHex(worldPos)).ToList();
-            return maxRange > 0 ? coordPath.Take(maxRange + 1).ToList() : coordPath;
-        }
-
-        public List<Vector3I> GetReachableCoords(Vector3I start, int range)
-        {
-            var reachable = new List<Vector3I>();
-            var visited = new HashSet<Vector3I>();
-            var queue = new Queue<(Vector3I coord, int distance)>();
-
-            queue.Enqueue((start, 0));
-            visited.Add(start);
-
-            while (queue.Count > 0)
-            {
-                var (current, distance) = queue.Dequeue();
-                reachable.Add(current);
-
-                if (distance >= range)
-                    continue;
-
-                foreach (var dir in HexGrid.Directions.Values)
-                {
-                    var neighborCoord = current + dir;
-                    if (_tiles.TryGetValue(neighborCoord, out var neighborTile) &&
-                        !visited.Contains(neighborCoord) &&
-                        neighborTile.Get<TileComponent>().Type != TileType.Blocked &&
-                        !_entityManager.IsTileOccupied(neighborCoord))
-                    {
-                        visited.Add(neighborCoord);
-                        queue.Enqueue((neighborCoord, distance + 1));
-                    }
-                }
-            }
-
-            return reachable;
-        }
-
-        private void OnMoveCompleted(Entity entity, Vector3I fromCoord, Vector3I toCoord)
-        {
-            UpdateConnectionsForTile(fromCoord);
-            UpdateConnectionsForTile(toCoord);
         }
 
         private void UpdateConnectionsForTile(Vector3I coord)
@@ -157,7 +116,7 @@ namespace Game.Systems
                 var neighborCoord = coord + dir;
                 if (_tiles.TryGetValue(neighborCoord, out var neighborTile))
                 {
-                    if (_entityManager.IsTileOccupied(neighborCoord))
+                    if (Entities.IsTileOccupied(neighborCoord))
                         continue;
 
                     int neighborIndex = neighborTile.Get<TileComponent>().Index;
@@ -167,6 +126,43 @@ namespace Game.Systems
                     }
                 }
             }
+        }
+
+        /**
+        * Utilities
+        */
+        public List<Vector3I> GetReachableCoords(Vector3I start, int range)
+        {
+            var reachable = new List<Vector3I>();
+            var visited = new HashSet<Vector3I>();
+            var queue = new Queue<(Vector3I coord, int distance)>();
+
+            queue.Enqueue((start, 0));
+            visited.Add(start);
+
+            while (queue.Count > 0)
+            {
+                var (current, distance) = queue.Dequeue();
+                reachable.Add(current);
+
+                if (distance >= range)
+                    continue;
+
+                foreach (var dir in HexGrid.Directions.Values)
+                {
+                    var neighborCoord = current + dir;
+                    if (_tiles.TryGetValue(neighborCoord, out var neighborTile) &&
+                        !visited.Contains(neighborCoord) &&
+                        neighborTile.Get<TileComponent>().Type != TileType.Blocked &&
+                        !Entities.IsTileOccupied(neighborCoord))
+                    {
+                        visited.Add(neighborCoord);
+                        queue.Enqueue((neighborCoord, distance + 1));
+                    }
+                }
+            }
+
+            return reachable;
         }
 
         public bool HasConnection(Vector3I coord, Vector3I neighborCoord)
@@ -180,6 +176,20 @@ namespace Game.Systems
             return _astar.HasPoint(tileIndex) &&
                    _astar.HasPoint(neighborIndex) &&
                    _astar.ArePointsConnected(tileIndex, neighborIndex);
+        }
+
+        /**
+        * Event listeners
+        */
+        private void OnMoveCompleted(Entity entity, Vector3I fromCoord, Vector3I toCoord)
+        {
+            UpdateConnectionsForTile(fromCoord);
+            UpdateConnectionsForTile(toCoord);
+        }
+
+        private void OnUnitDefeated(Entity unit)
+        {
+            UpdateConnectionsForTile(unit.Get<TileComponent>().Coord);
         }
     }
 }

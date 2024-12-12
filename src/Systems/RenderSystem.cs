@@ -1,22 +1,18 @@
-using System.Collections.Generic;
-using System.Linq;
-using Game.Autoload;
 using Godot;
 
-namespace Game.Systems
+namespace Game
 {
-    public class RenderSystem(EntityManager _entityManager)
+    public class RenderSystem : System
     {
-        // private readonly EntityManager _entityManager = entityManager;
         private readonly Node3D _boardContainer = new() { Name = "Board" };
         private readonly Node3D _unitContainer = new() { Name = "Units" };
 
-        public void RenderBoard()
+        public override void Initialize()
         {
-            _entityManager.GetRootNode().AddChild(_boardContainer);
-            _entityManager.GetRootNode().AddChild(_unitContainer);
+            Entities.GetRootNode().AddChild(_boardContainer);
+            Entities.GetRootNode().AddChild(_unitContainer);
 
-            var tiles = _entityManager.GetTiles();
+            var tiles = Entities.GetTiles();
 
             foreach (var tile in tiles)
             {
@@ -42,19 +38,20 @@ namespace Game.Systems
                         mouseEvent.ButtonIndex == MouseButton.Left &&
                         mouseEvent.Pressed)
                     {
-                        EventBus.Instance.OnTileSelect(tile);
-                        EventBus.Instance.OnTileClick(tileComponent.Coord);
+                        // GD.Print("wtf");
+                        Events.OnTileSelect(tile);
+                        Events.OnTileClick(tileComponent.Coord);
                     }
                 };
 
                 tileBody.MouseEntered += () =>
                 {
-                    EventBus.Instance.OnTileHover(tile);
+                    Events.OnTileHover(tile);
                 };
 
                 tileBody.MouseExited += () =>
                 {
-                    EventBus.Instance.OnTileUnhover(tile);
+                    Events.OnTileUnhover(tile);
                 };
             }
 

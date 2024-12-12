@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Godot;
 
 namespace Game
@@ -12,13 +11,5 @@ namespace Game
         int MoveRange = 1,
         int AttackRange = 1,
         AnimationState AnimationState = AnimationState.Spawn
-    );
-
-    public record TileComponent(
-        Node3D Node,
-        string Name,
-        Vector3I Coord,
-        TileType Type,
-        int Index
     );
 }

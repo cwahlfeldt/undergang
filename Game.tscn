@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://b7hk23qxs73ej"]
+[gd_scene load_steps=4 format=3 uid="uid://ctcp80yo5q4pn"]
 
 [ext_resource type="PackedScene" uid="uid://da6kx4g45r18p" path="res://src/Scenes/HexTile.tscn" id="1_tlxlt"]
 [ext_resource type="PackedScene" uid="uid://dqwcyy4b4vn7l" path="res://src/Scenes/Grunt.tscn" id="2_mspba"]
