@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Game.Components;
 using Godot;
 
 namespace Game
@@ -138,6 +139,56 @@ namespace Game
                 Health: 3,
                 MoveRange: 1
             ));
+        }
+
+        public IEnumerable<Entity> RenderGame(int mapSize)
+        {
+            var renderables = Query<Instance>();
+            // var tiles = renderables.Select(renderable => )
+
+            return renderables;
+        }
+
+        public Entity CreateTile(Vector3I coord)
+        {
+            var tile = new Entity(GetNextId());
+
+            tile.Add(new Tile());
+            tile.Add(new Instance(new Node3D()));
+            tile.Add(new Coordinate(coord));
+
+            return tile;
+        }
+
+        public Entity CreatePlayer()
+        {
+            var player = new Entity(GetNextId());
+
+            player.Add(new Player());
+            player.Add(new Instance(new Node3D()));
+            player.Add(new Coordinate(Config.PlayerStart));
+            player.Add(new Damage(1));
+            player.Add(new Health(1));
+            player.Add(new MoveRange(1));
+            player.Add(new AttackRange(1));
+
+            return player;
+        }
+
+        public Entity CreateEnemy(UnitType unitType)
+        {
+            var enemy = new Entity(GetNextId());
+
+            enemy.Add(new Enemy());
+            enemy.Add(new Grunt());
+            enemy.Add(new Instance(new Node3D()));
+            enemy.Add(new Coordinate(GetRandTileEntity().Get<TileComponent>().Coord));
+            enemy.Add(new Damage(1));
+            enemy.Add(new Health(1));
+            enemy.Add(new MoveRange(1));
+            enemy.Add(new AttackRange(1));
+
+            return enemy;
         }
 
         public void SpawnGrunt()
