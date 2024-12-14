@@ -15,7 +15,7 @@ public class HexGrid
             { "SouthEast", new Vector3I(1, 0, -1) }
         };
 
-    public static List<Vector3I> GenerateHexCoordinates(int mapSize)
+    public static IEnumerable<Vector3I> GenerateHexCoordinates(int mapSize)
     {
         var coords = new List<Vector3I>();
         for (int q = -mapSize; q <= mapSize; q++)

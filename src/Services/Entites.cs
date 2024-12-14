@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Game.Components;
 using Godot;
 
@@ -141,21 +142,32 @@ namespace Game
             ));
         }
 
-        public IEnumerable<Entity> RenderGame(int mapSize)
+        public IEnumerable<Entity> SpawnGrid(int mapSize = 5, int blockedTilesAmt = 16)
         {
-            var renderables = Query<Instance>();
-            // var tiles = renderables.Select(renderable => )
+            var randBlockedTileIndices = Utils.GenerateRandomIntArray(blockedTilesAmt);
+            return HexGrid.GenerateHexCoordinates(mapSize)
+                .Select((coord, i) =>
+                {
+                    var tile = CreateTile(coord, i);
 
-            return renderables;
+                    if (randBlockedTileIndices.Contains(i) && coord != Config.PlayerStart)
+                        tile.Add(new Untraversable());
+                    else
+                        tile.Add(new Traversable());
+
+                    return tile;
+                });
         }
 
-        public Entity CreateTile(Vector3I coord)
+        public Entity CreateTile(Vector3I coord, int index = 0)
         {
             var tile = new Entity(GetNextId());
 
+            tile.Add(new Name($"Tile {coord}"));
             tile.Add(new Tile());
             tile.Add(new Instance(new Node3D()));
             tile.Add(new Coordinate(coord));
+            tile.Add(new TileIndex(index));
 
             return tile;
         }
@@ -164,6 +176,7 @@ namespace Game
         {
             var player = new Entity(GetNextId());
 
+            player.Add(new Name("Player"));
             player.Add(new Player());
             player.Add(new Instance(new Node3D()));
             player.Add(new Coordinate(Config.PlayerStart));
@@ -179,8 +192,9 @@ namespace Game
         {
             var enemy = new Entity(GetNextId());
 
+            enemy.Add(new Name("Enemy"));
             enemy.Add(new Enemy());
-            enemy.Add(new Grunt());
+            enemy.Add(new Unit(UnitType.Grunt));
             enemy.Add(new Instance(new Node3D()));
             enemy.Add(new Coordinate(GetRandTileEntity().Get<TileComponent>().Coord));
             enemy.Add(new Damage(1));
