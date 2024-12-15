@@ -14,6 +14,7 @@ namespace Game.Components
     public readonly record struct Sniper;
     public readonly record struct Attacker;
     public readonly record struct Target;
+    public readonly record struct Active;
 
     // wack ass
     public record struct Instance(Node3D Node) { public static implicit operator Node3D(Instance node) => node.Node; }

@@ -40,7 +40,7 @@ namespace Game
 
         public (UnitComponent unit, Vector3I coord, Entity entity) GetPlayer()
         {
-            var entity = Lookup<UnitComponent>().FirstOrDefault(e =>
+            var entity = Query<UnitComponent>().FirstOrDefault(e =>
                 e.Get<UnitComponent>().Type == UnitType.Player);
 
             return entity != null ? (
@@ -51,26 +51,26 @@ namespace Game
         }
 
         public IEnumerable<Entity> GetEnemies() =>
-            Lookup<UnitComponent>()
+            Query<UnitComponent>()
                 .Where(e => e.Get<UnitComponent>().Type == UnitType.Grunt);
 
-        public Entity GetRandTileEntity()
-        {
-            var rand = new Random();
-            var entitiesAwayFromPlayer = Lookup<TileComponent>()
-                .Where(e =>
-                    !e.Has<UnitComponent>() &&
-                    !HexGrid.GetHexesInRange(Config.PlayerStart, 3).Contains(e.Get<TileComponent>().Coord) &&
-                    e.Get<TileComponent>().Type != TileType.Blocked);
+        // public Entity GetRandTileEntity()
+        // {
+        //     var rand = new Random();
+        //     var entitiesAwayFromPlayer = Query<TileComponent>()
+        //         .Where(e =>
+        //             !e.Has<UnitComponent>() &&
+        //             !HexGrid.GetHexesInRange(Config.PlayerStart, 3).Contains(e.Get<TileComponent>().Coord) &&
+        //             e.Get<TileComponent>().Type != TileType.Blocked);
 
-            return entitiesAwayFromPlayer
-            .ElementAtOrDefault(rand.Next(0, entitiesAwayFromPlayer.Count()));
-        }
+        //     return entitiesAwayFromPlayer
+        //     .ElementAtOrDefault(rand.Next(0, entitiesAwayFromPlayer.Count()));
+        // }
 
         public Entity GetRandomTileEntity()
         {
             var rand = new Random();
-            var entitiesAwayFromPlayer = Lookup<Coordinate>()
+            var entitiesAwayFromPlayer = Query<Coordinate>()
                 .Where(e =>
                     !e.Has<Unit>() &&
                     !e.Has<Untraversable>() &&
@@ -81,7 +81,7 @@ namespace Game
         }
 
         public IEnumerable<Entity> GetTiles() =>
-            Lookup<TileComponent>();
+            Query<TileComponent>();
 
         public Entity GetAt(Vector3I coord) =>
             GetTiles().FirstOrDefault(e => e.Get<TileComponent>().Coord == coord);
@@ -98,64 +98,76 @@ namespace Game
                     HexGrid.GetHexesInRange(coord, range).Contains(e.Get<TileComponent>().Coord) &&
                     e.Get<TileComponent>().Coord != coord).ToList();
 
-        public IEnumerable<Entity> Lookup<T1>() =>
+        public IEnumerable<Entity> Query<T1>() =>
             _entities.Values.Where(e =>
                 e.Has<T1>()).ToList();
-
         public IEnumerable<Entity> Query<T1, T2>() =>
             _entities.Values.Where(e =>
                 e.Has<T1>() &&
                 e.Has<T2>()).ToList();
+        public IEnumerable<Entity> Query<T1, T2, T3>() =>
+            _entities.Values.Where(e =>
+                e.Has<T1>() &&
+                e.Has<T2>() &&
+                e.Has<T3>())
+                .ToList();
+        public IEnumerable<Entity> Query<T1, T2, T3, T4>() =>
+            _entities.Values.Where(e =>
+                e.Has<T1>() &&
+                e.Has<T2>() &&
+                e.Has<T3>() &&
+                e.Has<T4>())
+                .ToList();
 
-        public IEnumerable<Entity> CreateGrid(int radius, int blockedTilesAmt = 16)
-        {
-            // Generate the coordinates
-            var coordinates = HexGrid.GenerateHexCoordinates(radius);
-            var randBlockedTileIndices = Utils.GenerateRandomIntArray(blockedTilesAmt);
+        // public IEnumerable<Entity> CreateGrid(int radius, int blockedTilesAmt = 16)
+        // {
+        //     // Generate the coordinates
+        //     var coordinates = HexGrid.GenerateHexCoordinates(radius);
+        //     var randBlockedTileIndices = Utils.GenerateRandomIntArray(blockedTilesAmt);
 
-            // Create tile entities
-            var entities = new List<Entity>();
-            var index = 0;
-            foreach (var coord in coordinates)
-            {
-                var tileType = randBlockedTileIndices.Contains(index) && coord != Config.PlayerStart ? TileType.Blocked : TileType.Floor;
-                var entity = CreateTileEntity(coord, index, tileType);
-                entities.Add(entity);
-                index++;
-            }
+        //     // Create tile entities
+        //     var entities = new List<Entity>();
+        //     var index = 0;
+        //     foreach (var coord in coordinates)
+        //     {
+        //         var tileType = randBlockedTileIndices.Contains(index) && coord != Config.PlayerStart ? TileType.Blocked : TileType.Floor;
+        //         var entity = CreateTileEntity(coord, index, tileType);
+        //         entities.Add(entity);
+        //         index++;
+        //     }
 
-            return entities;
-        }
+        //     return entities;
+        // }
 
-        private Entity CreateTileEntity(Vector3I hexCoord, int index, TileType tileType)
-        {
-            var tileEntity = new Entity(GetNextId());
+        // private Entity CreateTileEntity(Vector3I hexCoord, int index, TileType tileType)
+        // {
+        //     var tileEntity = new Entity(GetNextId());
 
-            tileEntity.Add(new TileComponent(
-                new Node3D(),
-                $"Tile {hexCoord} {index}",
-                hexCoord,
-                tileType,
-                index
-            ));
+        //     tileEntity.Add(new TileComponent(
+        //         new Node3D(),
+        //         $"Tile {hexCoord} {index}",
+        //         hexCoord,
+        //         tileType,
+        //         index
+        //     ));
 
-            AddEntity(tileEntity);
-            return tileEntity;
-        }
+        //     AddEntity(tileEntity);
+        //     return tileEntity;
+        // }
 
-        public void SpawnPlayer()
-        {
-            var tile = GetAt(Config.PlayerStart);
-            tile.Add(new UnitComponent(
-                Node: new Node3D(),
-                Name: $"Player {Guid.NewGuid()}",
-                Type: UnitType.Player,
-                Health: 3,
-                MoveRange: 1
-            ));
-        }
+        // public void SpawnPlayer()
+        // {
+        //     var tile = GetAt(Config.PlayerStart);
+        //     tile.Add(new UnitComponent(
+        //         Node: new Node3D(),
+        //         Name: $"Player {Guid.NewGuid()}",
+        //         Type: UnitType.Player,
+        //         Health: 3,
+        //         MoveRange: 1
+        //     ));
+        // }
 
-        public IEnumerable<Entity> SpawnGrid(int mapSize = 5, int blockedTilesAmt = 16)
+        public IEnumerable<Entity> CreateGrid(int mapSize = 5, int blockedTilesAmt = 16)
         {
             var randBlockedTileIndices = Utils.GenerateRandomIntArray(blockedTilesAmt);
             return HexGrid.GenerateHexCoordinates(mapSize)
@@ -195,7 +207,7 @@ namespace Game
             player.Add(new Instance(new Node3D()));
             player.Add(new Coordinate(Config.PlayerStart));
             player.Add(new Damage(1));
-            player.Add(new Health(1));
+            player.Add(new Health(3));
             player.Add(new MoveRange(1));
             player.Add(new AttackRange(1));
 
@@ -219,16 +231,16 @@ namespace Game
             return enemy;
         }
 
-        public void SpawnGrunt()
-        {
-            var tile = GetAt(GetRandTileEntity().Get<TileComponent>().Coord);
-            tile.Add(new UnitComponent(
-                Node: new Node3D(),
-                Name: $"Enemy {Guid.NewGuid()}",
-                Type: UnitType.Grunt,
-                Health: 1,
-                MoveRange: 1
-            ));
-        }
+        // public void SpawnGrunt()
+        // {
+        //     var tile = GetAt(GetRandTileEntity().Get<TileComponent>().Coord);
+        //     tile.Add(new UnitComponent(
+        //         Node: new Node3D(),
+        //         Name: $"Enemy {Guid.NewGuid()}",
+        //         Type: UnitType.Grunt,
+        //         Health: 1,
+        //         MoveRange: 1
+        //     ));
+        // }
     }
 }

@@ -15,7 +15,7 @@ namespace Game
             Entities.GetRootNode().AddChild(_boardContainer);
             Entities.GetRootNode().AddChild(_unitContainer);
 
-            foreach (Entity entity in Entities.Lookup<Instance>())
+            foreach (Entity entity in Entities.Query<Instance>())
             {
                 if (entity.Has<Tile>())
                 {

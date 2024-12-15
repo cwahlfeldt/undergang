@@ -9,8 +9,17 @@ namespace Game
         private readonly Dictionary<Type, object> _components = [];
         public T Get<T>() => (T)_components[typeof(T)];
         public bool Has<T>() => _components.ContainsKey(typeof(T));
-        public void Add<T>(T component) => _components[typeof(T)] = component;
+        public void Add<T>(T component)
+        {
+            _components[typeof(T)] = component;
+            Events.Instance.OnComponentChanged(typeof(T), component);
+        }
+        public T Update<T>(T newComponent)
+        {
+            var result = (T)(_components[typeof(T)] = newComponent);
+            Events.Instance.OnComponentChanged(typeof(T), newComponent);
+            return result;
+        }
         public void Remove<T>(T component) => _components.Remove(typeof(T));
-        public T Update<T>(T newComponent) => (T)(_components[typeof(T)] = newComponent);
     }
 }

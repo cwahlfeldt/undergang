@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Godot;
 
 namespace Game
 {
     public partial class Systems
     {
-        private readonly Dictionary<Type, ISystem> _systems = [];
+        private readonly Dictionary<Type, ISystem> _sequential = [];
+        private readonly Dictionary<Type, ISystem> _concurrent = [];
         private readonly SystemDependencies _dependencies;
         private bool _initialized;
 
@@ -21,98 +24,104 @@ namespace Game
                 this
             );
 
-            _systems[typeof(Entities)] = entities;
-            _systems[typeof(Events)] = Events.Instance;
-            _systems[typeof(Tweener)] = Tweener.Instance;
+            _sequential[typeof(Entities)] = entities;
+            _sequential[typeof(Events)] = Events.Instance;
+            _sequential[typeof(Tweener)] = Tweener.Instance;
         }
 
         public T Register<T>() where T : System, new()
         {
             var system = new T();
             system.InjectDependencies(_dependencies);
-            _systems[typeof(T)] = system;
+            _sequential[typeof(T)] = system;
             return system;
         }
 
-        // private void Register(Entities entityManager)
-        // {
-        //     _systems[typeof(Entities)] = entityManager;
-        // }
-        // private void Register(Events events)
-        // {
-        //     _systems[typeof(Events)] = events;
-        // }
-        // private void Register(Tweener entityManager)
-        // {
-        //     _systems[typeof(Tweener)] = entityManager;
-        // }
-        // private void Register(Entities entityManager)
-        // {
-        //     _systems[typeof(Entities)] = entityManager;
-        // }
-
-        public Entities GetEntityManager()
+        public T RegisterConcurrent<T>() where T : System, new()
         {
-            return _dependencies.Entities;
+            var system = new T();
+            system.InjectDependencies(_dependencies);
+            _concurrent[typeof(T)] = system;
+            return system;
         }
+
+        public Entities GetEntityManager() => _dependencies.Entities;
 
         public T Get<T>() where T : ISystem
         {
-            if (!_systems.TryGetValue(typeof(T), out var system))
-                throw new InvalidOperationException($"System of type {typeof(T).Name} not found.");
+            if (_sequential.TryGetValue(typeof(T), out var system) ||
+                _concurrent.TryGetValue(typeof(T), out system))
+                return (T)system;
 
-            return (T)system;
+            throw new InvalidOperationException($"System of type {typeof(T).Name} not found.");
         }
 
         public void Initialize()
         {
             if (_initialized) return;
 
-            foreach (var system in _systems.Values)
-            {
+            foreach (var system in _sequential.Values)
                 system.Initialize();
-            }
+
+            foreach (var system in _concurrent.Values)
+                system.Initialize();
+
             _initialized = true;
         }
 
-        public void Update(Entity entity)
+        public async Task Update(Entity entity)
         {
-            foreach (var system in _systems.Values)
+            // Run sequential systems
+            foreach (var system in _sequential.Values)
             {
                 if (system is System baseSystem)
                 {
-                    baseSystem.Update(entity);
+                    await baseSystem.Update(entity);
                 }
             }
+
+            // Run concurrent systems
+            var concurrentTasks = _concurrent.Values
+                .Where(s => s is System)
+                .Select(s => ((System)s).Update(entity));
+
+            await Task.WhenAll(concurrentTasks);
         }
 
         public void Cleanup()
         {
-            foreach (var system in _systems.Values)
+            foreach (var system in _sequential.Values.Concat(_concurrent.Values))
             {
                 if (system is System baseSystem)
                 {
                     baseSystem.Cleanup();
                 }
             }
-            _systems.Clear();
+
+            _sequential.Clear();
+            _concurrent.Clear();
             _initialized = false;
         }
 
-
         public IEnumerable<ISystem> GetAllSystems()
         {
-            return _systems.Values;
+            return _sequential.Values.Concat(_concurrent.Values);
         }
 
         public void RemoveSystem<T>() where T : ISystem
         {
             var type = typeof(T);
-            if (_systems.TryGetValue(type, out var system))
+            if (_sequential.TryGetValue(type, out var system))
             {
                 system.Cleanup();
-                _systems.Remove(type);
+                _sequential.Remove(type);
+            }
+            else if (_concurrent.TryGetValue(type, out system))
+            {
+                system.Cleanup();
+                _concurrent.Remove(type);
             }
         }
     }
 }
+

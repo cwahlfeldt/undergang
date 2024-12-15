@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Game.Components;
 
 namespace Game
 {
@@ -14,30 +15,37 @@ namespace Game
             RefreshTurnQueue();
         }
 
-        private void RefreshTurnQueue()
+        private async void RefreshTurnQueue()
         {
             _turnQueue.Clear();
-            var player = Entities.GetPlayer();
-            if (player.entity != null) _turnQueue.Enqueue(player.entity);
 
-            foreach (var enemy in Entities.GetEnemies())
+            var player = Entities.Query<Player>().FirstOrDefault();
+
+            if (player != null)
+                _turnQueue.Enqueue(player);
+
+            foreach (var enemy in Entities.Query<Enemy>())
                 _turnQueue.Enqueue(enemy);
 
             if (CurrentUnit != null)
-                Events.OnTurnChanged(CurrentUnit);
+            {
+                CurrentUnit.Add(new Active());
+                await Events.OnTurnChanged(CurrentUnit);
+            }
         }
 
-        public void EndTurn()
+        public async void EndTurn()
         {
             if (_turnQueue.Count > 0)
             {
-                _turnQueue.Dequeue();
+                var lastEntity = _turnQueue.Dequeue();
+                lastEntity.Remove(lastEntity.Get<Active>());
 
                 if (_turnQueue.Count == 0)
                     RefreshTurnQueue();
 
                 if (CurrentUnit != null)
-                    Events.OnTurnChanged(CurrentUnit);
+                    await Events.OnTurnChanged(CurrentUnit);
             }
         }
 
@@ -46,9 +54,6 @@ namespace Game
 
         public bool IsUnitTurn(Entity unit) =>
             CurrentUnit?.Id == unit.Id;
-
-        public bool OnlyPlayerRemains() =>
-            _turnQueue.Count == 1 && _turnQueue.Peek().Get<UnitComponent>().Type == UnitType.Player;
 
         private void OnUnitDefeated(Entity unit) => RemoveUnit(unit);
     }

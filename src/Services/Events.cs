@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Godot;
 
 namespace Game
@@ -14,7 +15,7 @@ namespace Game
         public event Action<Entity> TileUnhover;
         public event Action<Entity> UnitHover;
         public event Action<Entity> UnitUnhover;
-        public event Action<Type, object> OnComponentChanged;
+        public event Action<Type, object> ComponentChanged;
 
         public static Events Instance { get; private set; }
 
@@ -33,6 +34,10 @@ namespace Game
             UnitDefeated?.Invoke(unit);
         }
 
+        public void OnComponentChanged(Type type, object obj)
+        {
+            ComponentChanged?.Invoke(type, obj);
+        }
 
         public void OnTileSelect(Entity tile)
         {
@@ -44,7 +49,7 @@ namespace Game
             TileClick?.Invoke(coord);
         }
 
-        public void OnTurnChanged(Entity tile)
+        public async Task OnTurnChanged(Entity tile)
         {
             TurnChanged?.Invoke(tile);
         }

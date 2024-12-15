@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Game
 {
     public abstract class System : ISystem
@@ -22,7 +24,8 @@ namespace Game
         }
 
         public virtual void Initialize() { }
-        public virtual void Update(Entity entity) { }
+        public virtual async Task Update(Entity entity) { }
+        public virtual async Task Process(float delta) { }
         public virtual void Cleanup() { }
     }
 }
