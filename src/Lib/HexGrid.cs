@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-public class HexGrid
+public static class HexGrid
 {
     public const float HEX_SIZE = 1.05f;
 

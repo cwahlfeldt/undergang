@@ -4,15 +4,12 @@ namespace Game
 {
     public class DebugSystem : System
     {
-        private PathFinderSystem _pathFinderSystem;
         private Node3D _debugNode;
         private Node3D _pathfindingNode;
         private bool _showPathfinding = false;
 
         public override void Initialize()
         {
-            _pathFinderSystem = Systems.Get<PathFinderSystem>();
-
             SetupDebugNodes();
             TogglePathfindingDebug();
             Events.MoveCompleted += OnMoveCompleted;
@@ -68,7 +65,7 @@ namespace Game
                 foreach (var dir in HexGrid.Directions.Values)
                 {
                     var neighborCoord = coord + dir;
-                    if (_pathFinderSystem.HasConnection(coord, neighborCoord))
+                    if (PathFinder.HasConnection(coord, neighborCoord))
                     {
                         var neighborWorldPos = HexGrid.HexToWorld(neighborCoord);
                         var connection = CreateConnectionLine(worldPos, neighborWorldPos);

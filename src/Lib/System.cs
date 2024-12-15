@@ -5,6 +5,7 @@ namespace Game
     public abstract class System : ISystem
     {
         protected Entities Entities { get; private set; }
+        protected PathFinder PathFinder { get; private set; }
         protected Events Events { get; private set; }
         protected Tweener Tweener { get; private set; }
         protected Systems Systems { get; private set; }
@@ -12,6 +13,7 @@ namespace Game
         internal void InjectDependencies(SystemDependencies dependencies)
         {
             Entities = dependencies.Entities;
+            PathFinder = dependencies.PathFinder;
             Events = dependencies.Events;
             Tweener = dependencies.Tweener;
             Systems = dependencies.Systems;

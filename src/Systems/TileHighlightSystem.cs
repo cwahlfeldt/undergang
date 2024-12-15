@@ -43,7 +43,7 @@ namespace Game
                 !_highlightedTiles.Contains(tile))
             {
                 var player = Entities.GetPlayer();
-                var path = Systems.Get<PathFinderSystem>().FindPath(player.coord, tile.Get<TileComponent>().Coord, -1);
+                var path = PathFinder.FindPath(player.coord, tile.Get<TileComponent>().Coord, -1);
 
                 if (path.Count > 0)
                 {

@@ -12,13 +12,14 @@ namespace Game
         private readonly Dictionary<Type, ISystem> _concurrent = [];
         private readonly SystemDependencies _dependencies;
         private bool _initialized;
-
         public Systems(Node3D rootNode)
         {
             var entities = new Entities(rootNode);
+            var pathfinder = new PathFinder(entities);
 
             _dependencies = new SystemDependencies(
                 entities,
+                pathfinder,
                 Events.Instance,
                 Tweener.Instance,
                 this

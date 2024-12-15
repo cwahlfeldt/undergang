@@ -28,7 +28,7 @@ namespace Game
             if (!Systems.Get<TurnSystem>().IsUnitTurn(player.entity))
                 return;
 
-            var path = Systems.Get<PathFinderSystem>().FindPath(
+            var path = PathFinder.FindPath(
                 player.coord,
                 entity.Get<TileComponent>().Coord,
                 player.unit.MoveRange
@@ -143,7 +143,7 @@ namespace Game
 
         private async Task MoveEnemyTowardsPlayer(Entity enemy, Entity player)
         {
-            var path = Systems.Get<PathFinderSystem>().FindPath(
+            var path = PathFinder.FindPath(
                 enemy.Get<TileComponent>().Coord,
                 player.Get<TileComponent>().Coord,
                 enemy.Get<UnitComponent>().MoveRange

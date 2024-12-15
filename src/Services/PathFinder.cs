@@ -4,23 +4,24 @@ using Godot;
 
 namespace Game
 {
-    public class PathFinderSystem : System
+    public class PathFinder : ISystem
     {
         private readonly AStar3D _astar = new();
         private Dictionary<Vector3I, Entity> _tiles = [];
+        private readonly Entities _entities;
 
-        public override void Initialize()
+        public PathFinder(Entities entities)
         {
-            Events.MoveCompleted += OnMoveCompleted;
-            Events.UnitDefeated += OnUnitDefeated;
-
+            Events.Instance.MoveCompleted += OnMoveCompleted;
+            Events.Instance.UnitDefeated += OnUnitDefeated;
+            _entities = entities;
             SetupPathfinding();
         }
 
         public void SetupPathfinding()
         {
             _astar.Clear();
-            _tiles = Entities
+            _tiles = _entities
                 .GetTiles()
                 .ToDictionary(
                     entity => entity.Get<TileComponent>().Coord,
@@ -76,7 +77,7 @@ namespace Game
                     var neighborCoord = coord + dir;
                     if (_tiles.TryGetValue(neighborCoord, out var neighborTile))
                     {
-                        if (Entities.IsTileOccupied(neighborCoord))
+                        if (_entities.IsTileOccupied(neighborCoord))
                             continue;
 
                         int neighborIndex = neighborTile.Get<TileComponent>().Index;
@@ -116,7 +117,7 @@ namespace Game
                 var neighborCoord = coord + dir;
                 if (_tiles.TryGetValue(neighborCoord, out var neighborTile))
                 {
-                    if (Entities.IsTileOccupied(neighborCoord))
+                    if (_entities.IsTileOccupied(neighborCoord))
                         continue;
 
                     int neighborIndex = neighborTile.Get<TileComponent>().Index;
@@ -154,7 +155,7 @@ namespace Game
                     if (_tiles.TryGetValue(neighborCoord, out var neighborTile) &&
                         !visited.Contains(neighborCoord) &&
                         neighborTile.Get<TileComponent>().Type != TileType.Blocked &&
-                        !Entities.IsTileOccupied(neighborCoord))
+                        !_entities.IsTileOccupied(neighborCoord))
                     {
                         visited.Add(neighborCoord);
                         queue.Enqueue((neighborCoord, distance + 1));
