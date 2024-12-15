@@ -11,6 +11,6 @@ namespace Game
         public bool Has<T>() => _components.ContainsKey(typeof(T));
         public void Add<T>(T component) => _components[typeof(T)] = component;
         public void Remove<T>(T component) => _components.Remove(typeof(T));
-        public void Update<T>(T newComponent) => _components[typeof(T)] = newComponent;
+        public T Update<T>(T newComponent) => (T)(_components[typeof(T)] = newComponent);
     }
 }

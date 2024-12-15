@@ -18,9 +18,9 @@ namespace Game
             return _nextId++;
         }
 
-        public void AddEntity(Entity entity)
+        public Entity AddEntity(Entity entity)
         {
-            _entities[entity.Id] = entity;
+            return _entities[entity.Id] = entity;
         }
 
         public Dictionary<int, Entity> GetEntities()
@@ -40,7 +40,7 @@ namespace Game
 
         public (UnitComponent unit, Vector3I coord, Entity entity) GetPlayer()
         {
-            var entity = Query<UnitComponent>().FirstOrDefault(e =>
+            var entity = Lookup<UnitComponent>().FirstOrDefault(e =>
                 e.Get<UnitComponent>().Type == UnitType.Player);
 
             return entity != null ? (
@@ -51,13 +51,13 @@ namespace Game
         }
 
         public IEnumerable<Entity> GetEnemies() =>
-            Query<UnitComponent>()
+            Lookup<UnitComponent>()
                 .Where(e => e.Get<UnitComponent>().Type == UnitType.Grunt);
 
         public Entity GetRandTileEntity()
         {
             var rand = new Random();
-            var entitiesAwayFromPlayer = Query<TileComponent>()
+            var entitiesAwayFromPlayer = Lookup<TileComponent>()
                 .Where(e =>
                     !e.Has<UnitComponent>() &&
                     !HexGrid.GetHexesInRange(Config.PlayerStart, 3).Contains(e.Get<TileComponent>().Coord) &&
@@ -67,8 +67,21 @@ namespace Game
             .ElementAtOrDefault(rand.Next(0, entitiesAwayFromPlayer.Count()));
         }
 
+        public Entity GetRandomTileEntity()
+        {
+            var rand = new Random();
+            var entitiesAwayFromPlayer = Lookup<Coordinate>()
+                .Where(e =>
+                    !e.Has<Unit>() &&
+                    !e.Has<Untraversable>() &&
+                    !HexGrid.GetHexesInRange(Config.PlayerStart, 3).Contains(e.Get<Coordinate>()));
+
+            return entitiesAwayFromPlayer
+            .ElementAtOrDefault(rand.Next(0, entitiesAwayFromPlayer.Count()));
+        }
+
         public IEnumerable<Entity> GetTiles() =>
-            Query<TileComponent>();
+            Lookup<TileComponent>();
 
         public Entity GetAt(Vector3I coord) =>
             GetTiles().FirstOrDefault(e => e.Get<TileComponent>().Coord == coord);
@@ -83,16 +96,16 @@ namespace Game
             GetTiles()
                 .Where(e =>
                     HexGrid.GetHexesInRange(coord, range).Contains(e.Get<TileComponent>().Coord) &&
-                    e.Get<TileComponent>().Coord != coord);
+                    e.Get<TileComponent>().Coord != coord).ToList();
 
-        public IEnumerable<Entity> Query<T1>() =>
+        public IEnumerable<Entity> Lookup<T1>() =>
             _entities.Values.Where(e =>
-                e.Has<T1>());
+                e.Has<T1>()).ToList();
 
         public IEnumerable<Entity> Query<T1, T2>() =>
             _entities.Values.Where(e =>
                 e.Has<T1>() &&
-                e.Has<T2>());
+                e.Has<T2>()).ToList();
 
         public IEnumerable<Entity> CreateGrid(int radius, int blockedTilesAmt = 16)
         {
@@ -156,12 +169,12 @@ namespace Game
                         tile.Add(new Traversable());
 
                     return tile;
-                });
+                }).ToList();
         }
 
         public Entity CreateTile(Vector3I coord, int index = 0)
         {
-            var tile = new Entity(GetNextId());
+            var tile = AddEntity(new Entity(GetNextId()));
 
             tile.Add(new Name($"Tile {coord}"));
             tile.Add(new Tile());
@@ -174,10 +187,11 @@ namespace Game
 
         public Entity CreatePlayer()
         {
-            var player = new Entity(GetNextId());
+            var player = AddEntity(new Entity(GetNextId()));
 
             player.Add(new Name("Player"));
             player.Add(new Player());
+            player.Add(new Unit(UnitType.Player));
             player.Add(new Instance(new Node3D()));
             player.Add(new Coordinate(Config.PlayerStart));
             player.Add(new Damage(1));
@@ -190,13 +204,13 @@ namespace Game
 
         public Entity CreateEnemy(UnitType unitType)
         {
-            var enemy = new Entity(GetNextId());
+            var enemy = AddEntity(new Entity(GetNextId()));
 
             enemy.Add(new Name("Enemy"));
             enemy.Add(new Enemy());
-            enemy.Add(new Unit(UnitType.Grunt));
+            enemy.Add(new Unit(unitType));
             enemy.Add(new Instance(new Node3D()));
-            enemy.Add(new Coordinate(GetRandTileEntity().Get<TileComponent>().Coord));
+            enemy.Add(new Coordinate(GetRandomTileEntity().Get<Coordinate>()));
             enemy.Add(new Damage(1));
             enemy.Add(new Health(1));
             enemy.Add(new MoveRange(1));

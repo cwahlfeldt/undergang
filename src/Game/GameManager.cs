@@ -1,3 +1,4 @@
+using Game.Components;
 using Godot;
 
 namespace Game
@@ -10,20 +11,24 @@ namespace Game
         {
             _systems = new Systems(this);
 
-            _systems.Register<RenderSystem>();
-            _systems.Register<PathFinderSystem>();
-            _systems.Register<TurnSystem>();
-            _systems.Register<MovementSystem>();
-            _systems.Register<UISystem>();
-            _systems.Register<TileHighlightSystem>();
-            _systems.Register<DebugSystem>();
-            _systems.Register<CombatSystem>();
+            var entityManager = _systems.GetEntityManager();
+            entityManager.SpawnGrid(5);
+            entityManager.CreatePlayer();
+            entityManager.CreateEnemy(UnitType.Grunt);
+            entityManager.CreateEnemy(UnitType.Grunt);
+            entityManager.CreateEnemy(UnitType.Grunt);
 
-            _systems.GetEntityManager().CreateGrid(5);
-            _systems.GetEntityManager().SpawnPlayer();
-            _systems.GetEntityManager().SpawnGrunt();
-            _systems.GetEntityManager().SpawnGrunt();
-            _systems.GetEntityManager().SpawnGrunt();
+            _systems.Register<RenderSystem>();
+
+            // _systems.Register<PathFinderSystem>();
+            // _systems.Register<TurnSystem>();
+            // _systems.Register<MovementSystem>();
+            // _systems.Register<UISystem>();
+            // _systems.Register<TileHighlightSystem>();
+            // _systems.Register<DebugSystem>();
+            // _systems.Register<CombatSystem>();
+
+
 
             _systems.Initialize();
         }
