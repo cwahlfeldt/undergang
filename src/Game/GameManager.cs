@@ -24,6 +24,9 @@ namespace Game
 
             _systems.Register<RenderSystem>();
             _systems.Register<TurnSystem>();
+            _systems.Register<PlayerSystem>();
+            _systems.Register<MovementSystem>();
+
             _systems.RegisterConcurrent<ComponentDebugSystem>();
 
             // _systems.Register<PathFinderSystem>();

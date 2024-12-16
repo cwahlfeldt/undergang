@@ -51,21 +51,7 @@ namespace Game
         }
 
         public IEnumerable<Entity> GetEnemies() =>
-            Query<UnitComponent>()
-                .Where(e => e.Get<UnitComponent>().Type == UnitType.Grunt);
-
-        // public Entity GetRandTileEntity()
-        // {
-        //     var rand = new Random();
-        //     var entitiesAwayFromPlayer = Query<TileComponent>()
-        //         .Where(e =>
-        //             !e.Has<UnitComponent>() &&
-        //             !HexGrid.GetHexesInRange(Config.PlayerStart, 3).Contains(e.Get<TileComponent>().Coord) &&
-        //             e.Get<TileComponent>().Type != TileType.Blocked);
-
-        //     return entitiesAwayFromPlayer
-        //     .ElementAtOrDefault(rand.Next(0, entitiesAwayFromPlayer.Count()));
-        // }
+            Query<Unit, Enemy>();
 
         public Entity GetRandomTileEntity()
         {
@@ -81,15 +67,15 @@ namespace Game
         }
 
         public IEnumerable<Entity> GetTiles() =>
-            Query<TileComponent>();
+            Query<Tile>();
 
         public Entity GetAt(Vector3I coord) =>
-            GetTiles().FirstOrDefault(e => e.Get<TileComponent>().Coord == coord);
+            Query<Tile>().FirstOrDefault(e => e.Get<Coordinate>() == coord);
 
         public bool IsTileOccupied(Vector3I coord)
         {
             var tile = GetAt(coord);
-            return tile != null && tile.Has<UnitComponent>();
+            return tile != null && tile.Has<Unit>();
         }
 
         public IEnumerable<Entity> GetTilesInRange(Vector3I coord, int range) =>
@@ -230,17 +216,5 @@ namespace Game
 
             return enemy;
         }
-
-        // public void SpawnGrunt()
-        // {
-        //     var tile = GetAt(GetRandTileEntity().Get<TileComponent>().Coord);
-        //     tile.Add(new UnitComponent(
-        //         Node: new Node3D(),
-        //         Name: $"Enemy {Guid.NewGuid()}",
-        //         Type: UnitType.Grunt,
-        //         Health: 1,
-        //         MoveRange: 1
-        //     ));
-        // }
     }
 }

@@ -2,6 +2,7 @@ using Game.Components;
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -130,23 +131,29 @@ namespace Game
             return sb.ToString();
         }
 
-        private void OnComponentChanged(Type componentType, object component)
+        private void OnComponentChanged(int id, Type componentType, object component)
         {
             if (!_showComponents) return;
-
-            // Find the entity that contains this component
-            var entity = Entities.GetEntities().Values.FirstOrDefault(e =>
+            UpdateAllEntityComponents();
+            if (_entityLabels.TryGetValue(id, out var label))
             {
-                var components = e.GetType()
-                    .GetField("_components", BindingFlags.NonPublic | BindingFlags.Instance)
-                    ?.GetValue(e) as Dictionary<Type, object>;
-                return components?.ContainsValue(component) ?? false;
-            });
-
-            if (entity != null && _entityLabels.TryGetValue(entity.Id, out var label))
-            {
+                var entity = Entities.GetEntities()[id];
                 label.Text = FormatEntityComponents(entity);
             }
+
+            // var entity = Entities.GetEntities().Values.FirstOrDefault(e =>
+            // {
+            //     var components = e.GetType()
+            //         .GetField("_components", BindingFlags.NonPublic | BindingFlags.Instance)
+            //         ?.GetValue(e) as Dictionary<Type, object>;
+
+            //     return components?.ContainsValue(component) ?? false;
+            // });
+
+            // if (entity != null && _entityLabels.TryGetValue(entity.Id, out var label))
+            // {
+            //     label.Text = FormatEntityComponents(entity);
+            // }
         }
 
         private void ClearComponentViewer()

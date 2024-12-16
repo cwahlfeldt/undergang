@@ -23,6 +23,7 @@ namespace Game
                     var tileInstance = entity.Update(new Instance(tileScene));
 
                     _boardContainer.AddChild(tileInstance.Node);
+
                     tileInstance.Node.Position = HexGrid.HexToWorld(entity.Get<Coordinate>());
                     tileInstance.Node.Name = entity.Get<Name>();
 
@@ -31,6 +32,7 @@ namespace Game
                         tileInstance.Node.GetNode<MeshInstance3D>("Mesh").Visible = false;
                     }
                 }
+                SetupInputs(entity);
 
                 if (entity.Has<Unit>())
                 {
@@ -42,6 +44,39 @@ namespace Game
                     unitInstance.Node.Position = HexGrid.HexToWorld(entity.Get<Coordinate>());
                     unitInstance.Node.Name = entity.Get<Name>();
                 }
+            }
+
+            Events.OnGridReady(Entities.Query<Tile>());
+        }
+
+        public void SetupInputs(Entity entity)
+        {
+            if (!entity.Has<Tile>())
+                return;
+
+            if (entity.Get<Instance>().Node is Area3D tileBody)
+            {
+                tileBody.InputEvent += (camera, @event, position, normal, shapeIdx) =>
+                {
+                    if (@event is InputEventMouseButton mouseEvent &&
+                        mouseEvent.ButtonIndex == MouseButton.Left &&
+                        mouseEvent.Pressed)
+                    {
+                        // GD.Print("wtf");
+                        Events.OnTileSelect(entity);
+                        // Events.OnTileClick(tileComponent.Coord);
+                    }
+                };
+
+                tileBody.MouseEntered += () =>
+                {
+                    Events.OnTileHover(entity);
+                };
+
+                tileBody.MouseExited += () =>
+                {
+                    Events.OnTileUnhover(entity);
+                };
             }
         }
 
@@ -78,7 +113,7 @@ namespace Game
                     {
                         // GD.Print("wtf");
                         Events.OnTileSelect(tile);
-                        Events.OnTileClick(tileComponent.Coord);
+                        // Events.OnTileClick(tileComponent.Coord);
                     }
                 };
 

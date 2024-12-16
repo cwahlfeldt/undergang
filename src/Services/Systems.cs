@@ -25,8 +25,9 @@ namespace Game
                 this
             );
 
-            _sequential[typeof(Entities)] = entities;
             _sequential[typeof(Events)] = Events.Instance;
+            _sequential[typeof(Entities)] = entities;
+            _sequential[typeof(PathFinder)] = pathfinder;
             _sequential[typeof(Tweener)] = Tweener.Instance;
         }
 
@@ -125,4 +126,7 @@ namespace Game
         }
     }
 }
+
+
+
 

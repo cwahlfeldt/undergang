@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Game.Components;
 using Godot;
 
 namespace Game
@@ -14,7 +16,15 @@ namespace Game
         {
             Events.Instance.MoveCompleted += OnMoveCompleted;
             Events.Instance.UnitDefeated += OnUnitDefeated;
+            Events.Instance.GridReady += OnGridReady;
+
             _entities = entities;
+            // SetupPathfinding();
+        }
+
+        private void OnGridReady(IEnumerable<Entity> enumerable)
+        {
+            GD.Print("PathFinder: Grid ready");
             SetupPathfinding();
         }
 
@@ -22,9 +32,9 @@ namespace Game
         {
             _astar.Clear();
             _tiles = _entities
-                .GetTiles()
+                .Query<Tile, Coordinate>()
                 .ToDictionary(
-                    entity => entity.Get<TileComponent>().Coord,
+                    entity => entity.Get<Coordinate>().Value,  // has to be explicit
                     entity => entity
                 );
 
@@ -37,29 +47,31 @@ namespace Game
             if (!_tiles.TryGetValue(from, out var fromTile) || !_tiles.TryGetValue(to, out var toTile))
                 return [];
 
-            int fromIndex = fromTile.Get<TileComponent>().Index;
-            int toIndex = toTile.Get<TileComponent>().Index;
+
+            int fromIndex = fromTile.Get<TileIndex>();
+            int toIndex = toTile.Get<TileIndex>();
 
             if (!_astar.HasPoint(fromIndex) || !_astar.HasPoint(toIndex))
                 return [];
+            GD.Print("here");
 
             var path = _astar.GetPointPath(fromIndex, toIndex);
             if (path == null || path.Length == 0)
                 return [];
 
-            var coordPath = path.Select(worldPos => HexGrid.WorldToHex(worldPos)).ToList();
+            var coordPath = path.Select(HexGrid.WorldToHex).ToList();
+
             return maxRange > 0 ? coordPath.Take(maxRange + 1).ToList() : coordPath;
         }
 
         private void AddPoints()
         {
-            foreach (var (coord, tile) in _tiles)
+            foreach (var (_, tile) in _tiles)
             {
-                var tileComponent = tile.Get<TileComponent>();
-                if (tileComponent.Type != TileType.Blocked)
+                if (tile.Has<Traversable>())
                 {
-                    int index = tileComponent.Index;
-                    _astar.AddPoint(index, tileComponent.Node.Position);
+                    int index = tile.Get<TileIndex>();
+                    _astar.AddPoint(index, tile.Get<Instance>().Node.Position);
                 }
             }
         }
@@ -68,7 +80,7 @@ namespace Game
         {
             foreach (var (coord, tile) in _tiles)
             {
-                int currentIndex = tile.Get<TileComponent>().Index;
+                int currentIndex = tile.Get<TileIndex>();
                 if (!_astar.HasPoint(currentIndex))
                     continue;
 
@@ -80,7 +92,7 @@ namespace Game
                         if (_entities.IsTileOccupied(neighborCoord))
                             continue;
 
-                        int neighborIndex = neighborTile.Get<TileComponent>().Index;
+                        int neighborIndex = neighborTile.Get<TileIndex>();
                         if (_astar.HasPoint(neighborIndex) && !_astar.ArePointsConnected(currentIndex, neighborIndex))
                         {
                             _astar.ConnectPoints(currentIndex, neighborIndex);
@@ -95,7 +107,7 @@ namespace Game
             if (!_tiles.TryGetValue(coord, out var tile))
                 return;
 
-            int tileIndex = tile.Get<TileComponent>().Index;
+            int tileIndex = tile.Get<TileIndex>();
 
             // Disconnect existing connections
             foreach (var dir in HexGrid.Directions.Values)
@@ -103,7 +115,7 @@ namespace Game
                 var neighborCoord = coord + dir;
                 if (_tiles.TryGetValue(neighborCoord, out var neighborTile))
                 {
-                    int neighborIndex = neighborTile.Get<TileComponent>().Index;
+                    int neighborIndex = neighborTile.Get<TileIndex>();
                     if (_astar.ArePointsConnected(tileIndex, neighborIndex))
                     {
                         _astar.DisconnectPoints(tileIndex, neighborIndex);
@@ -120,7 +132,7 @@ namespace Game
                     if (_entities.IsTileOccupied(neighborCoord))
                         continue;
 
-                    int neighborIndex = neighborTile.Get<TileComponent>().Index;
+                    int neighborIndex = neighborTile.Get<TileIndex>();
                     if (_astar.HasPoint(neighborIndex) && !_astar.ArePointsConnected(tileIndex, neighborIndex))
                     {
                         _astar.ConnectPoints(tileIndex, neighborIndex);
@@ -154,7 +166,7 @@ namespace Game
                     var neighborCoord = current + dir;
                     if (_tiles.TryGetValue(neighborCoord, out var neighborTile) &&
                         !visited.Contains(neighborCoord) &&
-                        neighborTile.Get<TileComponent>().Type != TileType.Blocked &&
+                        neighborTile.Has<Untraversable>() &&
                         !_entities.IsTileOccupied(neighborCoord))
                     {
                         visited.Add(neighborCoord);
@@ -171,8 +183,8 @@ namespace Game
             if (!_tiles.TryGetValue(coord, out var tile) || !_tiles.TryGetValue(neighborCoord, out var neighborTile))
                 return false;
 
-            int tileIndex = tile.Get<TileComponent>().Index;
-            int neighborIndex = neighborTile.Get<TileComponent>().Index;
+            int tileIndex = tile.Get<TileIndex>();
+            int neighborIndex = neighborTile.Get<TileIndex>();
 
             return _astar.HasPoint(tileIndex) &&
                    _astar.HasPoint(neighborIndex) &&
@@ -190,7 +202,7 @@ namespace Game
 
         private void OnUnitDefeated(Entity unit)
         {
-            UpdateConnectionsForTile(unit.Get<TileComponent>().Coord);
+            UpdateConnectionsForTile(unit.Get<Coordinate>());
         }
     }
 }

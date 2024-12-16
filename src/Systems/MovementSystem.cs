@@ -1,30 +1,36 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Game.Components;
 using Godot;
 
 namespace Game
 {
     public class MovementSystem : System
     {
-        public async Task<Entity> MoveUnitTo(Entity entity, List<Vector3I> path)
+        public override async Task Update(Entity entity)
         {
-            var unitComponent = entity.Get<UnitComponent>();
-            var tileComponent = entity.Get<TileComponent>();
-            var locations = path.Select(HexGrid.HexToWorld).ToList();
+            var moveEntites = Entities.Query<Movement>().ToList();
+            GD.Print($"Found {moveEntites.Count} entities to move");
 
-            await Tweener.MoveThrough(unitComponent.Node, locations);
+            if (!moveEntites.Any())
+                return;
 
-            var fromCoord = path.First();
-            var toCoord = path.Last();
-            var toEntity = Entities.GetAt(toCoord);
+            foreach (var mover in moveEntites)
+            {
+                var (from, to) = mover.Get<Movement>();
+                var path = PathFinder.FindPath(from, to, mover.Get<MoveRange>());
+                var locations = path.Select(HexGrid.HexToWorld).ToList();
 
-            entity.Remove(unitComponent);
-            toEntity.Add(unitComponent);
+                GD.Print($"From: {from}, To: {to}");
+                GD.Print($"Path length: {path.Count()}");
+                GD.Print($"World locations: {string.Join(", ", locations)}");
 
-            Events.OnMoveCompleted(toEntity, fromCoord, toCoord);
+                // This will now properly await on the main thread
+                await Tweener.MoveThrough(mover.Get<Instance>().Node, locations);
+                mover.Remove<Movement>();
+                // GD.Print(mover.Has<Movement>());
 
-            return toEntity;
+            }
         }
     }
 }

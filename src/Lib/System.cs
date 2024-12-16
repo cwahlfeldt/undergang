@@ -27,7 +27,7 @@ namespace Game
 
         public virtual void Initialize() { }
         public virtual async Task Update(Entity entity) { }
-        public virtual async Task Process(float delta) { }
+        public virtual async void Process(float delta) { }
         public virtual void Cleanup() { }
     }
 }

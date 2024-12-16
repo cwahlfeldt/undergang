@@ -56,7 +56,7 @@ namespace Game
             {
                 Systems.Get<TurnSystem>().RemoveUnit(target);
                 targetComponent.Node.QueueFree();
-                target.Remove(targetComponent);
+                // target.Remove(targetComponent);
                 return;
             }
 
@@ -68,7 +68,7 @@ namespace Game
             var startCoord = player.Get<TileComponent>().Coord;
             var initialAttackableEnemies = GetAttackableEnemies(startCoord);
 
-            await Systems.Get<MovementSystem>().MoveUnitTo(player, path);
+            // await Systems.Get<MovementSystem>().MoveUnitTo(player, path);
 
             var finalCoord = path.Last();
 
@@ -149,8 +149,8 @@ namespace Game
                 enemy.Get<UnitComponent>().MoveRange
             );
 
-            if (path.Count > 0)
-                await Systems.Get<MovementSystem>().MoveUnitTo(enemy, path);
+            // if (path.Count > 0)
+            //     await Systems.Get<MovementSystem>().MoveUnitTo(enemy, path);
         }
 
         private bool IsPlayerInAttackRange(Entity enemy, Entity player)

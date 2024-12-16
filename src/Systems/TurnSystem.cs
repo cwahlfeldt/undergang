@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Game.Components;
@@ -12,10 +13,17 @@ namespace Game
         public override void Initialize()
         {
             Events.UnitDefeated += OnUnitDefeated;
+            Events.TurnEnd += OnTurnEnd;
+
             RefreshTurnQueue();
         }
 
-        private async void RefreshTurnQueue()
+        private void OnTurnEnd(Entity entity)
+        {
+            EndTurn();
+        }
+
+        private void RefreshTurnQueue()
         {
             _turnQueue.Clear();
 
@@ -30,24 +38,25 @@ namespace Game
             if (CurrentUnit != null)
             {
                 CurrentUnit.Add(new Active());
-                await Events.OnTurnChanged(CurrentUnit);
+                Events.OnTurnChanged(CurrentUnit);
             }
         }
 
-        public async void EndTurn()
+        public void EndTurn()
         {
             if (_turnQueue.Count > 0)
             {
                 var lastEntity = _turnQueue.Dequeue();
-                lastEntity.Remove(lastEntity.Get<Active>());
+                lastEntity.Remove<Active>();
 
                 if (_turnQueue.Count == 0)
                     RefreshTurnQueue();
 
                 if (CurrentUnit != null)
-                    await Events.OnTurnChanged(CurrentUnit);
+                    Events.OnTurnChanged(CurrentUnit);
             }
         }
+
 
         public void RemoveUnit(Entity unit) =>
             _turnQueue = new Queue<Entity>(_turnQueue.Where(u => u.Id != unit.Id));

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
 
@@ -9,19 +10,26 @@ namespace Game
         public event Action<Entity> UnitDefeated;
         public event Action<Entity, Vector3I, Vector3I> MoveCompleted;
         public event Action<Entity> TurnChanged;
+        public event Action<Entity> TurnEnd;
         public event Action<Entity> TileSelect;
         public event Action<Vector3I> TileClick;
         public event Action<Entity> TileHover;
         public event Action<Entity> TileUnhover;
         public event Action<Entity> UnitHover;
         public event Action<Entity> UnitUnhover;
-        public event Action<Type, object> ComponentChanged;
+        public event Action<IEnumerable<Entity>> GridReady;
+        public event Action<int, Type, object> ComponentChanged;
 
         public static Events Instance { get; private set; }
 
         public override void _Ready()
         {
             Instance = this;
+        }
+
+        public void OnGridReady(IEnumerable<Entity> grid)
+        {
+            GridReady?.Invoke(grid);
         }
 
         public void OnMoveCompleted(Entity unit, Vector3I from, Vector3I to)
@@ -34,9 +42,9 @@ namespace Game
             UnitDefeated?.Invoke(unit);
         }
 
-        public void OnComponentChanged(Type type, object obj)
+        public void OnComponentChanged(int id, Type type, object obj)
         {
-            ComponentChanged?.Invoke(type, obj);
+            ComponentChanged?.Invoke(id, type, obj);
         }
 
         public void OnTileSelect(Entity tile)
@@ -44,14 +52,14 @@ namespace Game
             TileSelect?.Invoke(tile);
         }
 
-        public void OnTileClick(Vector3I coord)
-        {
-            TileClick?.Invoke(coord);
-        }
-
-        public async Task OnTurnChanged(Entity tile)
+        public void OnTurnChanged(Entity tile)
         {
             TurnChanged?.Invoke(tile);
+        }
+
+        public void EndTurn(Entity tile)
+        {
+            TurnEnd?.Invoke(tile);
         }
 
         public void OnTileHover(Entity tile)
