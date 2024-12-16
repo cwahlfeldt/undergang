@@ -25,8 +25,8 @@ namespace Game
             if (entity.Get<TileComponent>().Coord == player.coord)
                 return;
 
-            if (!Systems.Get<TurnSystem>().IsUnitTurn(player.entity))
-                return;
+            // if (!Systems.Get<TurnSystem>().IsUnitTurn(player.entity))
+            //     return;
 
             var path = PathFinder.FindPath(
                 player.coord,
@@ -39,7 +39,7 @@ namespace Game
                 _playerActionInProgress = true;
                 await ProcessPlayerTurn(player.entity, path);
                 _playerActionInProgress = false;
-                Systems.Get<TurnSystem>().EndTurn();
+                // Systems.Get<TurnSystem>().EndTurn();
             }
         }
 
@@ -54,7 +54,7 @@ namespace Game
 
             if (damageDone <= 0)
             {
-                Systems.Get<TurnSystem>().RemoveUnit(target);
+                // Systems.Get<TurnSystem>().RemoveUnit(target);
                 targetComponent.Node.QueueFree();
                 // target.Remove(targetComponent);
                 return;
@@ -124,8 +124,8 @@ namespace Game
 
             var player = Entities.GetPlayer();
 
-            if (player.entity != null && !Systems.Get<TurnSystem>().IsUnitTurn(player.entity))
-                await ProcessEnemyTurn(entity);
+            // if (player.entity != null && !Systems.Get<TurnSystem>().IsUnitTurn(player.entity))
+            await ProcessEnemyTurn(entity);
         }
 
         private async Task ProcessEnemyTurn(Entity enemy)
@@ -138,7 +138,7 @@ namespace Game
             if (!IsPlayerInAttackRange(enemy, player))
                 await MoveEnemyTowardsPlayer(enemy, player);
 
-            Systems.Get<TurnSystem>().EndTurn();
+            // Systems.Get<TurnSystem>().EndTurn();
         }
 
         private async Task MoveEnemyTowardsPlayer(Entity enemy, Entity player)

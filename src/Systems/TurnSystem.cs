@@ -1,69 +1,78 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using Game.Components;
+using Godot;
 
 namespace Game
 {
     public class TurnSystem : System
     {
-        private Queue<Entity> _turnQueue = new();
-        public Entity CurrentUnit => _turnQueue.Count > 0 ? _turnQueue.Peek() : null;
+        private int _currentTurnIndex = -1;  // Add this field to track current turn
 
         public override void Initialize()
         {
-            Events.UnitDefeated += OnUnitDefeated;
-            Events.TurnEnd += OnTurnEnd;
-
-            RefreshTurnQueue();
+            Events.OnUnitActionComplete += OnUnitActionComplete;
+            SetupInitialTurnOrder();
         }
 
-        private void OnTurnEnd(Entity entity)
+        private void SetupInitialTurnOrder()
         {
-            EndTurn();
-        }
-
-        private void RefreshTurnQueue()
-        {
-            _turnQueue.Clear();
-
             var player = Entities.Query<Player>().FirstOrDefault();
+            var enemies = Entities.Query<Enemy>();
+            var units = new[] { player }.Concat(enemies).ToList();
 
-            if (player != null)
-                _turnQueue.Enqueue(player);
+            GD.Print($"Setting up turn order for {units.Count} units");
 
-            foreach (var enemy in Entities.Query<Enemy>())
-                _turnQueue.Enqueue(enemy);
-
-            if (CurrentUnit != null)
+            for (int i = 0; i < units.Count; i++)
             {
-                CurrentUnit.Add(new Active());
-                Events.OnTurnChanged(CurrentUnit);
+                units[i].Add(new TurnOrder(i));
+                GD.Print($"Unit {i}: {units[i].Get<Name>()}");
+            }
+
+            if (units.Any())
+            {
+                _currentTurnIndex = -1; // Will become 0 after first advancement
+                AdvanceTurn();
             }
         }
 
-        public void EndTurn()
+        private void StartUnitTurn(Entity unit)
         {
-            if (_turnQueue.Count > 0)
+            GD.Print($"Starting turn for {unit.Get<Name>()}");
+            unit.Add(new CurrentTurn());
+            unit.Add(new WaitingForAction());
+            Events.OnTurnChanged(unit);
+        }
+
+        private void OnUnitActionComplete(Entity entity)
+        {
+            GD.Print($"Action complete for {entity.Get<Name>()}");
+            if (entity.Has<CurrentTurn>())
             {
-                var lastEntity = _turnQueue.Dequeue();
-                lastEntity.Remove<Active>();
-
-                if (_turnQueue.Count == 0)
-                    RefreshTurnQueue();
-
-                if (CurrentUnit != null)
-                    Events.OnTurnChanged(CurrentUnit);
+                GD.Print("Entity had CurrentTurn, advancing turn");
+                entity.Remove<CurrentTurn>();
+                entity.Remove<WaitingForAction>();
+                AdvanceTurn();
             }
         }
 
+        private void AdvanceTurn()
+        {
+            var allUnits = Entities.Query<TurnOrder>()
+                .OrderBy(e => e.Get<TurnOrder>())
+                .ToList();
 
-        public void RemoveUnit(Entity unit) =>
-            _turnQueue = new Queue<Entity>(_turnQueue.Where(u => u.Id != unit.Id));
+            GD.Print($"Total units in turn order: {allUnits.Count}");
 
-        public bool IsUnitTurn(Entity unit) =>
-            CurrentUnit?.Id == unit.Id;
+            _currentTurnIndex = (_currentTurnIndex + 1) % allUnits.Count;
+            GD.Print($"Turn advancing to index: {_currentTurnIndex}");
 
-        private void OnUnitDefeated(Entity unit) => RemoveUnit(unit);
+            var nextUnit = allUnits[_currentTurnIndex];
+            StartUnitTurn(nextUnit);
+        }
+
+        public override void Cleanup()
+        {
+            Events.OnUnitActionComplete -= OnUnitActionComplete;
+        }
     }
 }

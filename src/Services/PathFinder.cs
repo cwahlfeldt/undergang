@@ -53,7 +53,6 @@ namespace Game
 
             if (!_astar.HasPoint(fromIndex) || !_astar.HasPoint(toIndex))
                 return [];
-            GD.Print("here");
 
             var path = _astar.GetPointPath(fromIndex, toIndex);
             if (path == null || path.Length == 0)

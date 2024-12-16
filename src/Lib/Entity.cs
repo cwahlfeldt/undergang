@@ -7,21 +7,22 @@ namespace Game
     {
         public int Id { get; } = id;
         private readonly Dictionary<Type, object> _components = [];
-        // public T Get<T>() => (T)_components[typeof(T)];
+
         public bool Has<T>() => _components.ContainsKey(typeof(T));
+
         public void Add<T>(T component)
         {
             _components[typeof(T)] = component;
             Events.Instance.OnComponentChanged(Id, typeof(T), component);
         }
+
         public T Update<T>(T newComponent)
         {
             var result = (T)(_components[typeof(T)] = newComponent);
             Events.Instance.OnComponentChanged(Id, typeof(T), newComponent);
             return result;
         }
-        // public void Remove<T>(T component) => _components.Remove(typeof(T));
-        // This is how the Remove method should be implemented
+
         public void Remove<T>()
         {
             var type = typeof(T);
@@ -32,7 +33,6 @@ namespace Game
             }
         }
 
-        // For reference, this is probably how your Get method looks
         public T Get<T>()
         {
             var type = typeof(T);

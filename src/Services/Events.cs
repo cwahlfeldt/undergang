@@ -12,11 +12,11 @@ namespace Game
         public event Action<Entity> TurnChanged;
         public event Action<Entity> TurnEnd;
         public event Action<Entity> TileSelect;
-        public event Action<Vector3I> TileClick;
         public event Action<Entity> TileHover;
         public event Action<Entity> TileUnhover;
         public event Action<Entity> UnitHover;
         public event Action<Entity> UnitUnhover;
+        public event Action<Entity> OnUnitActionComplete;
         public event Action<IEnumerable<Entity>> GridReady;
         public event Action<int, Type, object> ComponentChanged;
 
@@ -25,6 +25,11 @@ namespace Game
         public override void _Ready()
         {
             Instance = this;
+        }
+
+        public void UnitActionComplete(Entity unit)
+        {
+            OnUnitActionComplete?.Invoke(unit);
         }
 
         public void OnGridReady(IEnumerable<Entity> grid)

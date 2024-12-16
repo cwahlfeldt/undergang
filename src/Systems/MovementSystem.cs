@@ -7,7 +7,7 @@ namespace Game
 {
     public class MovementSystem : System
     {
-        public override async Task Update(Entity entity)
+        public override async Task Update()
         {
             var moveEntites = Entities.Query<Movement>().ToList();
             GD.Print($"Found {moveEntites.Count} entities to move");
@@ -21,14 +21,15 @@ namespace Game
                 var path = PathFinder.FindPath(from, to, mover.Get<MoveRange>());
                 var locations = path.Select(HexGrid.HexToWorld).ToList();
 
-                GD.Print($"From: {from}, To: {to}");
-                GD.Print($"Path length: {path.Count()}");
-                GD.Print($"World locations: {string.Join(", ", locations)}");
-
-                // This will now properly await on the main thread
                 await Tweener.MoveThrough(mover.Get<Instance>().Node, locations);
+
+                mover.Update(new Coordinate(path.Last()));
                 mover.Remove<Movement>();
-                // GD.Print(mover.Has<Movement>());
+
+                if (mover.Has<CurrentTurn>())
+                {
+                    Events.UnitActionComplete(mover);
+                }
 
             }
         }

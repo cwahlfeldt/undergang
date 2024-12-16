@@ -71,21 +71,21 @@ namespace Game
             _initialized = true;
         }
 
-        public async Task Update(Entity entity)
+        public async Task Update()
         {
             // Run sequential systems
             foreach (var system in _sequential.Values)
             {
                 if (system is System baseSystem)
                 {
-                    await baseSystem.Update(entity);
+                    await baseSystem.Update();
                 }
             }
 
             // Run concurrent systems
             var concurrentTasks = _concurrent.Values
                 .Where(s => s is System)
-                .Select(s => ((System)s).Update(entity));
+                .Select(s => ((System)s).Update());
 
             await Task.WhenAll(concurrentTasks);
         }

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using Game.Components;
 using Godot;
 
 namespace Game
@@ -14,9 +16,9 @@ namespace Game
         {
             _uiNode = Entities.GetRootNode().GetNode<Control>("UI/SubViewportContainer/SubViewport/Control");
 
-            var player = Entities.GetPlayer();
+            var player = Entities.Query<Player>().FirstOrDefault();
 
-            var playerHealth = player.unit.Health;
+            var playerHealth = player.Get<Health>();
 
             for (int i = 0; i < playerHealth; i++)
             {

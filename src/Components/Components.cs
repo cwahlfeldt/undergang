@@ -15,23 +15,31 @@ namespace Game.Components
     public readonly record struct Attacker;
     public readonly record struct Target;
     public readonly record struct Active;
+    public readonly record struct CurrentTurn;
+    public readonly record struct WaitingForAction;
+    public readonly record struct SelectedTile;
 
-    // wack ass
     public record struct Instance(Node3D Node) { public static implicit operator Node3D(Instance node) => node.Node; }
-
-    // base components
     public record struct Name(StringName Value) { public static implicit operator StringName(Name name) => name.Value; }
     public record struct TileIndex(int Value) { public static implicit operator int(TileIndex index) => index.Value; }
-    public record struct Unit(UnitType Type)
-    {
-        public static implicit operator UnitType(Unit type) => type.Type;
-        public override readonly string ToString() => Type.ToString();
-    }
     public record struct Health(int Value) { public static implicit operator int(Health health) => health.Value; }
     public record struct Coordinate(Vector3I Value) { public static implicit operator Vector3I(Coordinate coord) => coord.Value; }
     public record struct Damage(int Value) { public static implicit operator int(Damage damage) => damage.Value; }
     public record struct MoveRange(int Value) { public static implicit operator int(MoveRange range) => range.Value; }
     public record struct AttackRange(int Value) { public static implicit operator int(AttackRange range) => range.Value; }
+
+    public record struct TurnOrder(int Value) : IComparable<TurnOrder>
+    {
+        public static implicit operator int(TurnOrder index) => index.Value;
+        public static implicit operator TurnOrder(int value) => new(value);
+
+        public readonly int CompareTo(TurnOrder other) => Value.CompareTo(other.Value);
+    }
+    public record struct Unit(UnitType Type)
+    {
+        public static implicit operator UnitType(Unit type) => type.Type;
+        public override readonly string ToString() => Type.ToString();
+    }
 
     public record struct Movement(Vector3I From, Vector3I To)
     {

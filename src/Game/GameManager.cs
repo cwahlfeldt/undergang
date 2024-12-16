@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Game.Components;
 using Godot;
 
@@ -12,6 +10,7 @@ namespace Game
         public override void _Ready()
         {
             Events.Instance.TurnChanged += OnTurnChanged;
+            // Events.Instance.OnUnitActionComplete += OnUnitActionComplete;
 
             _systems = new Systems(this);
 
@@ -19,12 +18,13 @@ namespace Game
             entityManager.CreateGrid(5);
             entityManager.CreatePlayer();
             entityManager.CreateEnemy(UnitType.Grunt);
-            entityManager.CreateEnemy(UnitType.Grunt);
-            entityManager.CreateEnemy(UnitType.Grunt);
+            // entityManager.CreateEnemy(UnitType.Grunt);
+            // entityManager.CreateEnemy(UnitType.Grunt);
 
             _systems.Register<RenderSystem>();
             _systems.Register<TurnSystem>();
             _systems.Register<PlayerSystem>();
+            _systems.Register<EnemySystem>();
             _systems.Register<MovementSystem>();
 
             _systems.RegisterConcurrent<ComponentDebugSystem>();
@@ -43,8 +43,7 @@ namespace Game
         private async void OnTurnChanged(Entity entity)
         {
             GD.Print($"Turn changed to {entity.Get<Name>()}");
-            await _systems.Update(entity);
+            await _systems.Update();
         }
-
     }
 }

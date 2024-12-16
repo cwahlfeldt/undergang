@@ -1,50 +1,69 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Game.Components;
+using Godot;
 
 namespace Game
 {
     public class PlayerSystem : System
     {
-        private bool _playerActionInProgress = false;
-
         public override void Initialize()
         {
             Events.TileSelect += OnTileSelect;
+            Events.OnUnitActionComplete += OnUnitActionComplete;
         }
 
-        public override async Task Update(Entity entity)
+        public override async Task Update()
         {
-            if (_playerActionInProgress)
-                return;
-
+            var selectedTile = Entities.Query<SelectedTile>().FirstOrDefault();
             var player = Entities.Query<Player>().FirstOrDefault();
 
-            if (!player.Has<Active>())
+            if (selectedTile == null ||
+                selectedTile.Get<Coordinate>() == player.Get<Coordinate>() ||
+                player.Has<Movement>() ||
+                !player.Has<WaitingForAction>())
                 return;
-
-            if (entity.Get<Coordinate>() == player.Get<Coordinate>() &&
-                !player.Has<Active>() &&
-                !entity.Has<Tile>())
-                return;
-
-            _playerActionInProgress = true;
 
             player.Add(new Movement(
                 player.Get<Coordinate>(),
-                entity.Get<Coordinate>()
+                selectedTile.Get<Coordinate>()
             ));
 
-            // await Systems.Update(player);
-
-
-            Events.EndTurn(player);
+            player.Remove<WaitingForAction>();
         }
 
         private async void OnTileSelect(Entity entity)
         {
-            await Systems.Update(entity);
-            _playerActionInProgress = false;
+            ClearSelectedTiles();
+            var player = Entities.Query<Player>().FirstOrDefault();
+
+            if (!player.Has<WaitingForAction>() || player.Has<Movement>())
+                return;
+
+            if (entity.Has<Tile>() && !entity.Has<SelectedTile>() && !entity.Has<Untraversable>())
+            {
+                ClearSelectedTiles();
+                entity.Add(new SelectedTile());
+                await Systems.Update();
+            }
+        }
+
+        private void OnUnitActionComplete(Entity _)
+        {
+            ClearSelectedTiles();
+        }
+
+        private void ClearSelectedTiles()
+        {
+            foreach (var tile in Entities.Query<SelectedTile>())
+                tile.Remove<SelectedTile>();
+        }
+
+        public override void Cleanup()
+        {
+            Events.TileSelect -= OnTileSelect;
+            Events.OnUnitActionComplete -= OnUnitActionComplete;
         }
     }
 }
