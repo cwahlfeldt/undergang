@@ -41,7 +41,7 @@ namespace Game
             if (!player.Has<WaitingForAction>() || player.Has<Movement>())
                 return;
 
-            if (entity.Has<Tile>() && !entity.Has<SelectedTile>() && !entity.Has<Untraversable>())
+            if (entity.Has<Tile>() && !entity.Has<SelectedTile>() && entity.Has<Traversable>())
             {
                 ClearSelectedTiles();
                 entity.Add(new SelectedTile());

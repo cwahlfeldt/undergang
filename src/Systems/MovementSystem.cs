@@ -10,7 +10,6 @@ namespace Game
         public override async Task Update()
         {
             var moveEntites = Entities.Query<Movement>().ToList();
-            GD.Print($"Found {moveEntites.Count} entities to move");
 
             if (!moveEntites.Any())
                 return;
@@ -23,11 +22,15 @@ namespace Game
 
                 await Tweener.MoveThrough(mover.Get<Instance>().Node, locations);
 
+                var fromTile = Entities.GetAt(path.First());
+                var toTile = Entities.GetAt(path.Last());
+
                 mover.Update(new Coordinate(path.Last()));
                 mover.Remove<Movement>();
 
                 if (mover.Has<CurrentTurn>())
                 {
+                    Events.OnMoveCompleted(mover, fromTile.Get<Coordinate>(), toTile.Get<Coordinate>());
                     Events.UnitActionComplete(mover);
                 }
 

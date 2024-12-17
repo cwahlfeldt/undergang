@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using Godot;
 using System.Threading.Tasks;
 using System;
+using Game.Components;
+using System.Linq;
 
 namespace Game
 {
@@ -42,8 +44,8 @@ namespace Game
                 tile != _selectedTile &&
                 !_highlightedTiles.Contains(tile))
             {
-                var player = Entities.GetPlayer();
-                var path = PathFinder.FindPath(player.coord, tile.Get<TileComponent>().Coord, -1);
+                var player = Entities.Query<Player>().FirstOrDefault();
+                var path = PathFinder.FindPath(player.Get<Coordinate>(), tile.Get<Coordinate>(), -1);
 
                 if (path.Count > 0)
                 {
@@ -132,7 +134,7 @@ namespace Game
 
         private void SetTileMaterial(Entity tile, StandardMaterial3D material)
         {
-            var tileNode = tile.Get<TileComponent>().Node;
+            var tileNode = tile.Get<Instance>().Node;
             if (tileNode is Node3D node)
             {
                 var mesh = node.GetNode<MeshInstance3D>("Mesh");

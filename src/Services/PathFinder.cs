@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Game.Components;
@@ -165,7 +164,7 @@ namespace Game
                     var neighborCoord = current + dir;
                     if (_tiles.TryGetValue(neighborCoord, out var neighborTile) &&
                         !visited.Contains(neighborCoord) &&
-                        neighborTile.Has<Untraversable>() &&
+                        !neighborTile.Has<Traversable>() &&
                         !_entities.IsTileOccupied(neighborCoord))
                     {
                         visited.Add(neighborCoord);

@@ -10,16 +10,10 @@ namespace Game
         public override void _Ready()
         {
             Events.Instance.TurnChanged += OnTurnChanged;
-            // Events.Instance.OnUnitActionComplete += OnUnitActionComplete;
 
             _systems = new Systems(this);
 
             var entityManager = _systems.GetEntityManager();
-            entityManager.CreateGrid(5);
-            entityManager.CreatePlayer();
-            entityManager.CreateEnemy(UnitType.Grunt);
-            // entityManager.CreateEnemy(UnitType.Grunt);
-            // entityManager.CreateEnemy(UnitType.Grunt);
 
             _systems.Register<RenderSystem>();
             _systems.Register<TurnSystem>();
@@ -28,14 +22,14 @@ namespace Game
             _systems.Register<MovementSystem>();
 
             _systems.RegisterConcurrent<ComponentDebugSystem>();
+            _systems.RegisterConcurrent<DebugSystem>();
+            _systems.RegisterConcurrent<TileHighlightSystem>();
 
-            // _systems.Register<PathFinderSystem>();
-
-            // _systems.Register<MovementSystem>();
-            // _systems.Register<UISystem>();
-            // _systems.Register<TileHighlightSystem>();
-            // _systems.Register<DebugSystem>();
-            // _systems.Register<CombatSystem>();
+            entityManager.CreateGrid(5);
+            entityManager.CreatePlayer();
+            entityManager.CreateEnemy(UnitType.Grunt);
+            entityManager.CreateEnemy(UnitType.Grunt);
+            entityManager.CreateEnemy(UnitType.Grunt);
 
             _systems.Initialize();
         }

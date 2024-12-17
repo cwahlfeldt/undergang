@@ -1,4 +1,5 @@
 using Godot;
+using Game.Components;
 
 namespace Game
 {
@@ -12,10 +13,10 @@ namespace Game
         {
             SetupDebugNodes();
             TogglePathfindingDebug();
-            Events.MoveCompleted += OnMoveCompleted;
+            Events.OnUnitActionComplete += OnUnitActionComplete;
         }
 
-        private void OnMoveCompleted(Entity entity, Vector3I from, Vector3I to)
+        private void OnUnitActionComplete(Entity entity)
         {
             if (_showPathfinding)
                 UpdatePathfindingDebug();
@@ -47,19 +48,19 @@ namespace Game
             // Draw nodes
             foreach (var tile in Entities.GetTiles())
             {
-                var coord = tile.Get<TileComponent>().Coord;
+                var coord = tile.Get<Coordinate>();
                 var worldPos = HexGrid.HexToWorld(coord);
 
                 // Create node visualization
                 var nodeMarker = CreateNodeMarker(worldPos, Entities.IsTileOccupied(coord));
-                if (tile.Get<TileComponent>().Type != TileType.Blocked)
+                if (tile.Has<Traversable>())
                     _pathfindingNode.AddChild(nodeMarker);
             }
 
             // Draw connections
             foreach (var tile in Entities.GetTiles())
             {
-                var coord = tile.Get<TileComponent>().Coord;
+                var coord = tile.Get<Coordinate>();
                 var worldPos = HexGrid.HexToWorld(coord);
 
                 foreach (var dir in HexGrid.Directions.Values)
@@ -123,7 +124,7 @@ namespace Game
 
         public override void Cleanup()
         {
-            Events.MoveCompleted -= OnMoveCompleted;
+            Events.OnUnitActionComplete -= OnUnitActionComplete;
         }
 
         private void ShowHexCoordLabels()
@@ -140,7 +141,7 @@ namespace Game
                 if (tile.Get<TileComponent>().Type == TileType.Blocked)
                     continue;
 
-                var hexCoord = tile.Get<TileComponent>().Coord;
+                var hexCoord = tile.Get<Coordinate>();
                 var labelPos = HexGrid.HexToWorld(hexCoord);
 
                 var coordLabel = new Label3D

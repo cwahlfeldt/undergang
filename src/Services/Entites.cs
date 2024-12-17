@@ -59,7 +59,7 @@ namespace Game
             var entitiesAwayFromPlayer = Query<Coordinate>()
                 .Where(e =>
                     !e.Has<Unit>() &&
-                    !e.Has<Untraversable>() &&
+                    e.Has<Traversable>() &&
                     !HexGrid.GetHexesInRange(Config.PlayerStart, 3).Contains(e.Get<Coordinate>()));
 
             return entitiesAwayFromPlayer
@@ -75,7 +75,8 @@ namespace Game
         public bool IsTileOccupied(Vector3I coord)
         {
             var tile = GetAt(coord);
-            return tile != null && tile.Has<Unit>();
+            var unit = Query<Unit>().FirstOrDefault(e => e.Get<Coordinate>() == coord);
+            return unit != null;
         }
 
         public IEnumerable<Entity> GetTilesInRange(Vector3I coord, int range) =>
@@ -105,54 +106,6 @@ namespace Game
                 e.Has<T4>())
                 .ToList();
 
-        // public IEnumerable<Entity> CreateGrid(int radius, int blockedTilesAmt = 16)
-        // {
-        //     // Generate the coordinates
-        //     var coordinates = HexGrid.GenerateHexCoordinates(radius);
-        //     var randBlockedTileIndices = Utils.GenerateRandomIntArray(blockedTilesAmt);
-
-        //     // Create tile entities
-        //     var entities = new List<Entity>();
-        //     var index = 0;
-        //     foreach (var coord in coordinates)
-        //     {
-        //         var tileType = randBlockedTileIndices.Contains(index) && coord != Config.PlayerStart ? TileType.Blocked : TileType.Floor;
-        //         var entity = CreateTileEntity(coord, index, tileType);
-        //         entities.Add(entity);
-        //         index++;
-        //     }
-
-        //     return entities;
-        // }
-
-        // private Entity CreateTileEntity(Vector3I hexCoord, int index, TileType tileType)
-        // {
-        //     var tileEntity = new Entity(GetNextId());
-
-        //     tileEntity.Add(new TileComponent(
-        //         new Node3D(),
-        //         $"Tile {hexCoord} {index}",
-        //         hexCoord,
-        //         tileType,
-        //         index
-        //     ));
-
-        //     AddEntity(tileEntity);
-        //     return tileEntity;
-        // }
-
-        // public void SpawnPlayer()
-        // {
-        //     var tile = GetAt(Config.PlayerStart);
-        //     tile.Add(new UnitComponent(
-        //         Node: new Node3D(),
-        //         Name: $"Player {Guid.NewGuid()}",
-        //         Type: UnitType.Player,
-        //         Health: 3,
-        //         MoveRange: 1
-        //     ));
-        // }
-
         public IEnumerable<Entity> CreateGrid(int mapSize = 5, int blockedTilesAmt = 16)
         {
             var randBlockedTileIndices = Utils.GenerateRandomIntArray(blockedTilesAmt);
@@ -161,9 +114,7 @@ namespace Game
                 {
                     var tile = CreateTile(coord, i);
 
-                    if (randBlockedTileIndices.Contains(i) && coord != Config.PlayerStart)
-                        tile.Add(new Untraversable());
-                    else
+                    if (!(randBlockedTileIndices.Contains(i) && coord != Config.PlayerStart))
                         tile.Add(new Traversable());
 
                     return tile;

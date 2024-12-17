@@ -20,6 +20,10 @@ config/icon="res://icon.svg"
 _Events_="*res://src/Services/Events.cs"
 _Tweener_="*res://src/Services/Tweener.cs"
 
+[display]
+
+window/size/viewport_width=1600
+
 [dotnet]
 
 project/assembly_name="Undergang"

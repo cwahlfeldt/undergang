@@ -27,7 +27,7 @@ namespace Game
                     tileInstance.Node.Position = HexGrid.HexToWorld(entity.Get<Coordinate>());
                     tileInstance.Node.Name = entity.Get<Name>();
 
-                    if (entity.Has<Untraversable>())
+                    if (!entity.Has<Traversable>())
                     {
                         tileInstance.Node.GetNode<MeshInstance3D>("Mesh").Visible = false;
                     }
