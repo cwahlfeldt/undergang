@@ -38,17 +38,17 @@ namespace Game
 
         public Entity GetEntity(int id) => _entities[id];
 
-        public (UnitComponent unit, Vector3I coord, Entity entity) GetPlayer()
-        {
-            var entity = Query<UnitComponent>().FirstOrDefault(e =>
-                e.Get<UnitComponent>().Type == UnitType.Player);
+        // public (UnitComponent unit, Vector3I coord, Entity entity) GetPlayer()
+        // {
+        //     var entity = Query<UnitComponent>().FirstOrDefault(e =>
+        //         e.Get<UnitComponent>().Type == UnitType.Player);
 
-            return entity != null ? (
-                unit: entity.Get<UnitComponent>(),
-                coord: entity.Get<TileComponent>().Coord,
-                entity
-            ) : default;
-        }
+        //     return entity != null ? (
+        //         unit: entity.Get<UnitComponent>(),
+        //         coord: entity.Get<TileComponent>().Coord,
+        //         entity
+        //     ) : default;
+        // }
 
         public IEnumerable<Entity> GetEnemies() =>
             Query<Unit, Enemy>();
@@ -80,10 +80,7 @@ namespace Game
         }
 
         public IEnumerable<Entity> GetTilesInRange(Vector3I coord, int range) =>
-            GetTiles()
-                .Where(e =>
-                    HexGrid.GetHexesInRange(coord, range).Contains(e.Get<TileComponent>().Coord) &&
-                    e.Get<TileComponent>().Coord != coord).ToList();
+            GetTiles();
 
         public IEnumerable<Entity> Query<T1>() =>
             _entities.Values.Where(e =>

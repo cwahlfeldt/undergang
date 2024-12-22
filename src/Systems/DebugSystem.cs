@@ -138,8 +138,8 @@ namespace Game
 
             foreach (var tile in Entities.GetTiles())
             {
-                if (tile.Get<TileComponent>().Type == TileType.Blocked)
-                    continue;
+                // if (tile.Get<TileComponent>().Type == TileType.Blocked)
+                //     continue;
 
                 var hexCoord = tile.Get<Coordinate>();
                 var labelPos = HexGrid.HexToWorld(hexCoord);

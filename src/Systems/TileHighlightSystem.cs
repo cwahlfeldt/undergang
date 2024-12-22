@@ -56,8 +56,12 @@ namespace Game
                     foreach (Vector3I t in path)
                     {
                         var tileTile = Entities.GetAt(t);
-                        SetTileMaterial(tileTile, _highlightMaterial);
-                        _highlightedTiles.Add(tileTile); // Add to tracking
+
+                        if (tileTile.Get<Coordinate>() != player.Get<Coordinate>())
+                        {
+                            SetTileMaterial(tileTile, _highlightMaterial);
+                            _highlightedTiles.Add(tileTile); // Add to tracking
+                        }
                     }
                 }
             }

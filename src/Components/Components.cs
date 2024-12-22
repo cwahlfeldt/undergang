@@ -35,6 +35,7 @@ namespace Game.Components
 
         public readonly int CompareTo(TurnOrder other) => Value.CompareTo(other.Value);
     }
+
     public record struct Unit(UnitType Type)
     {
         public static implicit operator UnitType(Unit type) => type.Type;
@@ -47,9 +48,9 @@ namespace Game.Components
             (movement.From, movement.To);
     }
 
-    public record struct Path(List<Vector3I> Value)
-    {
-        public static implicit operator List<Vector3I>(Path path) =>
-           path.Value;
-    }
+    // public record struct Path(List<Vector3I> Value)
+    // {
+    //     public static implicit operator List<Vector3I>(Path path) =>
+    //        path.Value;
+    // }
 }
