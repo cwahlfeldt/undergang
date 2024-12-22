@@ -2,173 +2,175 @@ using Game.Components;
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace Game
 {
     public partial class ComponentDebugSystem : System
     {
-        private Control _componentViewer;
-        private Dictionary<int, RichTextLabel> _entityLabels = new();
-        private bool _showComponents = false;
+        private Control _debugPanel;
+        private VBoxContainer _container;
+        private Dictionary<int, RichTextLabel> _entityLabels = [];
+        private bool _isVisible;
+
+        // Matches existing material color scheme
+        private static readonly Color HeaderColor = Colors.Yellow;
+        private static readonly Color ComponentColor = Colors.Aqua;
+        private static readonly Color PropertyColor = Colors.LightGreen;
 
         public override void Initialize()
         {
-            SetupComponentViewer();
-            ToggleComponentViewer();
-
-            // Subscribe to component changes
+            SetupDebugPanel();
+            Toggle();
             Events.ComponentChanged += OnComponentChanged;
         }
 
-        private void SetupComponentViewer()
+        private void SetupDebugPanel()
         {
-            // Create a Control node for the component viewer
-            _componentViewer = new Control
-            {
-                Name = "Component Viewer",
-                Position = new Vector2(10, 10),
-                Size = new Vector2(300, 600)
-            };
-
-            // Add it to the debug node
-            var canvas = new CanvasLayer { Name = "Debug Canvas" };
+            var canvas = new CanvasLayer { Name = "Debug Layer" };
             Entities.GetRootNode().AddChild(canvas);
-            canvas.AddChild(_componentViewer);
 
-            // Add a background panel
-            var panel = new PanelContainer
+            _debugPanel = new PanelContainer
             {
-                Name = "Background",
-                Size = _componentViewer.Size
+                Name = "Debug Panel",
+                Position = new Vector2(10, 10),
+                CustomMinimumSize = new Vector2(300, 600),
+                Theme = CreateDebugTheme()
             };
-            _componentViewer.AddChild(panel);
+            canvas.AddChild(_debugPanel);
 
-            // Add a scroll container
             var scroll = new ScrollContainer
             {
-                Name = "Scroll",
-                Size = panel.Size
+                CustomMinimumSize = _debugPanel.CustomMinimumSize,
+                VerticalScrollMode = ScrollContainer.ScrollMode.ShowAlways
             };
-            panel.AddChild(scroll);
+            _debugPanel.AddChild(scroll);
 
-            // Add a vertical container for entity labels
-            var container = new VBoxContainer
+            _container = new VBoxContainer
             {
-                Name = "Container",
-                Size = scroll.Size
+                CustomMinimumSize = new Vector2(280, 0)
             };
-            scroll.AddChild(container);
+            scroll.AddChild(_container);
 
-            _componentViewer.Visible = _showComponents;
+            _debugPanel.Hide();
         }
 
-        public void ToggleComponentViewer()
+        private Theme CreateDebugTheme()
         {
-            _showComponents = !_showComponents;
-            _componentViewer.Visible = _showComponents;
+            var theme = new Theme();
+            var style = new StyleBoxFlat
+            {
+                BgColor = new Color(0.1f, 0.1f, 0.1f, 0.9f),
+                BorderWidthLeft = 1,
+                BorderWidthTop = 1,
+                BorderWidthRight = 1,
+                BorderWidthBottom = 1,
+                BorderColor = new Color(0.3f, 0.3f, 0.3f),
+                CornerRadiusBottomLeft = 5,
+                CornerRadiusTopRight = 5,
+                CornerRadiusTopLeft = 5,
+                CornerRadiusBottomRight = 5,
+                ContentMarginLeft = 5,
+                ContentMarginTop = 5,
+                ContentMarginRight = 5,
+                ContentMarginBottom = 5
+            };
+            theme.SetStylebox("panel", "PanelContainer", style);
+            return theme;
+        }
 
-            if (_showComponents)
-                UpdateAllEntityComponents();
+        public void Toggle()
+        {
+            _isVisible = !_isVisible;
+            _debugPanel.Visible = _isVisible;
+
+            if (_isVisible)
+                UpdateDebugInfo();
             else
-                ClearComponentViewer();
+                ClearDebugInfo();
         }
 
-        private void UpdateAllEntityComponents()
+        private void UpdateDebugInfo()
         {
-            ClearComponentViewer();
-            var container = _componentViewer.GetNode<VBoxContainer>("Background/Scroll/Container");
+            ClearDebugInfo();
 
-            foreach (var entity in Entities.Query<Unit>())
+            foreach (var entity in Entities.Query<Unit>().OrderBy(e => e.Id))
             {
-                var label = CreateEntityLabel(entity);
-                container.AddChild(label);
+                var label = new RichTextLabel
+                {
+                    Name = $"Entity_{entity.Id}",
+                    BbcodeEnabled = true,
+                    FitContent = true,
+                    CustomMinimumSize = new Vector2(280, 0)
+                };
+
+                label.Text = FormatEntity(entity);
+                _container.AddChild(label);
                 _entityLabels[entity.Id] = label;
             }
         }
 
-        private RichTextLabel CreateEntityLabel(Entity entity)
+        private string FormatEntity(Entity entity)
         {
-            var label = new RichTextLabel
-            {
-                Name = $"Entity_{entity.Id}",
-                BbcodeEnabled = true,
-                FitContent = true,
-                SizeFlagsHorizontal = Control.SizeFlags.Fill,
-                CustomMinimumSize = new Vector2(280, 0),
-                Text = FormatEntityComponents(entity)
-            };
-            return label;
-        }
-
-        private string FormatEntityComponents(Entity entity)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine($"[color=yellow]Entity {entity.Id}[/color]");
-
-            // Get all components using reflection
             var components = entity.GetType()
                 .GetField("_components", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.GetValue(entity) as Dictionary<Type, object>;
 
-            if (components != null)
+            if (components == null)
+                return string.Empty;
+
+            var name = entity.Has<Name>() ? $" - {entity.Get<Name>()}" : "";
+            var text = $"[color=#{HeaderColor.ToHtml()}]Entity {entity.Id}{name}[/color]\n";
+
+            foreach (var (type, component) in components.OrderBy(c => c.Key.Name))
             {
-                foreach (var (type, component) in components)
+                text += $"\n[color=#{ComponentColor.ToHtml()}]▼ {type.Name}[/color]";
+
+                foreach (var prop in component.GetType().GetProperties().OrderBy(p => p.Name))
                 {
-                    sb.AppendLine($"[color=aqua]{type.Name}[/color]");
-                    var properties = component.GetType().GetProperties();
-                    foreach (var prop in properties)
-                    {
-                        var value = prop.GetValue(component);
-                        sb.AppendLine($"  {prop.Name}: {value}");
-                    }
+                    var value = prop.GetValue(component);
+                    var displayValue = FormatValue(value);
+                    text += $"\n  [color=#{PropertyColor.ToHtml()}]{prop.Name}:[/color] {displayValue}";
                 }
             }
 
-            return sb.ToString();
+            return text;
         }
 
-        private void OnComponentChanged(int id, Type componentType, object component)
+        private string FormatValue(object value)
         {
-            if (!_showComponents) return;
-            UpdateAllEntityComponents();
+            return value switch
+            {
+                null => "null",
+                Vector3I v => $"({v.X}, {v.Y}, {v.Z})",
+                IEnumerable<object> list => $"[{string.Join(", ", list)}]",
+                _ => value.ToString()
+            };
+        }
+
+        private void OnComponentChanged(int id, Type _, object __)
+        {
+            if (!_isVisible) return;
+
             if (_entityLabels.TryGetValue(id, out var label))
             {
-                var entity = Entities.GetEntities()[id];
-                label.Text = FormatEntityComponents(entity);
+                var entity = Entities.Query<Unit>().FirstOrDefault(e => e.Id == id);
+                if (entity != null)
+                    label.Text = FormatEntity(entity);
             }
-
-            // var entity = Entities.GetEntities().Values.FirstOrDefault(e =>
-            // {
-            //     var components = e.GetType()
-            //         .GetField("_components", BindingFlags.NonPublic | BindingFlags.Instance)
-            //         ?.GetValue(e) as Dictionary<Type, object>;
-
-            //     return components?.ContainsValue(component) ?? false;
-            // });
-
-            // if (entity != null && _entityLabels.TryGetValue(entity.Id, out var label))
-            // {
-            //     label.Text = FormatEntityComponents(entity);
-            // }
         }
 
-        private void ClearComponentViewer()
+        private void ClearDebugInfo()
         {
-            var container = _componentViewer.GetNode<VBoxContainer>("Background/Scroll/Container");
-            foreach (Node child in container.GetChildren())
-            {
+            foreach (Node child in _container.GetChildren())
                 child.QueueFree();
-            }
+
             _entityLabels.Clear();
         }
 
         public override void Cleanup()
         {
-            base.Cleanup();
             Events.ComponentChanged -= OnComponentChanged;
         }
     }
