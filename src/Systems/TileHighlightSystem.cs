@@ -9,7 +9,7 @@ namespace Game
 {
     public class TileHighlightSystem : System
     {
-        private HashSet<Entity> _highlightedTiles = [];
+        private readonly HashSet<Entity> _highlightedTiles = [];
         private StandardMaterial3D _highlightMaterial;
         private StandardMaterial3D _selectedMaterial;
         private StandardMaterial3D _defaultMaterial;

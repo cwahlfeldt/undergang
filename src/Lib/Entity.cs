@@ -40,5 +40,10 @@ namespace Game
                 ? (T)component
                 : default;
         }
+
+        public Dictionary<Type, object> GetComponents()
+        {
+            return _components;
+        }
     }
 }

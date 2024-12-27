@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=4 uid="uid://dqwcyy4b4vn7l"]
+[gd_scene load_steps=6 format=4 uid="uid://dqwcyy4b4vn7l"]
 
 [ext_resource type="Texture2D" uid="uid://b051hn1v02g51" path="res://assets/models/grunt_Image_6.png" id="1_lm2gu"]
 
@@ -41,7 +41,10 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_bto43")
 
-[node name="Enemy" type="Node3D" groups=["Enemy"]]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_qrunm"]
+height = 1.56693
+
+[node name="Enemy" type="Area3D" groups=["Enemy"]]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
 
 [node name="Mesh" type="Node3D" parent="."]
@@ -50,3 +53,7 @@ transform = Transform3D(0.18, 0, 0, 0, 0.18, 0, 0, 0, 0.18, 0, 0.84, 0)
 [node name="OmegaXD_OmegaXD_0" type="MeshInstance3D" parent="Mesh"]
 mesh = SubResource("ArrayMesh_ywtus")
 skeleton = NodePath("")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.836789, 0)
+shape = SubResource("CapsuleShape3D_qrunm")

@@ -7,7 +7,7 @@ namespace Game
 {
     public class CombatSystem : System
     {
-        private bool _playerActionInProgress = false;
+        private readonly bool _playerActionInProgress = false;
 
         public override void Initialize()
         {

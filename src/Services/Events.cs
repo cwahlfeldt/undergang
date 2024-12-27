@@ -14,6 +14,7 @@ namespace Game
         public event Action<Entity> TileSelect;
         public event Action<Entity> TileHover;
         public event Action<Entity> TileUnhover;
+        public event Action<Entity> UnitSelect;
         public event Action<Entity> UnitHover;
         public event Action<Entity> UnitUnhover;
         public event Action<Entity> OnUnitActionComplete;
@@ -85,6 +86,11 @@ namespace Game
         public void OnUnitUnhover(Entity tile)
         {
             UnitUnhover?.Invoke(tile);
+        }
+
+        internal void OnUnitSelect(Entity entity)
+        {
+            UnitSelect?.Invoke(entity);
         }
     }
 }

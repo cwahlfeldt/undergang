@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=4 uid="uid://btmreyav6kogk"]
+[gd_scene load_steps=6 format=4 uid="uid://btmreyav6kogk"]
 
 [ext_resource type="Texture2D" uid="uid://v0226vnifpdc" path="res://assets/models/player_Image_2.png" id="1_q7bkb"]
 
@@ -41,7 +41,10 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_1og54")
 
-[node name="Player" type="Node3D" groups=["Player"]]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nl44d"]
+height = 1.57736
+
+[node name="Player" type="Area3D" groups=["Player"]]
 
 [node name="Mesh" type="Node3D" parent="."]
 transform = Transform3D(0.23, 0, 0, 0, 0.23, 0, 0, 0, 0.23, 0, 0.703, 0)
@@ -49,3 +52,7 @@ transform = Transform3D(0.23, 0, 0, 0, 0.23, 0, 0, 0, 0.23, 0, 0.703, 0)
 [node name="Cube_009_Blue_0" type="MeshInstance3D" parent="Mesh"]
 mesh = SubResource("ArrayMesh_iqs8w")
 skeleton = NodePath("")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.800584, 0)
+shape = SubResource("CapsuleShape3D_nl44d")
