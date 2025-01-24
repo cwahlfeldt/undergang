@@ -50,6 +50,9 @@ namespace Game
         //     ) : default;
         // }
 
+        public Entity GetPlayer() =>
+            Query<Player>().FirstOrDefault();
+
         public IEnumerable<Entity> GetEnemies() =>
             Query<Unit, Enemy>();
 
@@ -82,31 +85,29 @@ namespace Game
         public IEnumerable<Entity> GetTilesInRange(Vector3I coord, int range) =>
             GetTiles();
 
-        public IEnumerable<Entity> Query<T1>() =>
-            _entities.Values.Where(e =>
-                e.Has<T1>()).ToList();
-        public IEnumerable<Entity> Query<T1, T2>() =>
-            _entities.Values.Where(e =>
+        public List<Entity> Query<T1>() =>
+            [.. _entities.Values.Where(e =>
+                e.Has<T1>())];
+        public List<Entity> Query<T1, T2>() =>
+            [.. _entities.Values.Where(e =>
                 e.Has<T1>() &&
-                e.Has<T2>()).ToList();
-        public IEnumerable<Entity> Query<T1, T2, T3>() =>
-            _entities.Values.Where(e =>
+                e.Has<T2>())];
+        public List<Entity> Query<T1, T2, T3>() =>
+            [.. _entities.Values.Where(e =>
                 e.Has<T1>() &&
                 e.Has<T2>() &&
-                e.Has<T3>())
-                .ToList();
-        public IEnumerable<Entity> Query<T1, T2, T3, T4>() =>
-            _entities.Values.Where(e =>
+                e.Has<T3>())];
+        public List<Entity> Query<T1, T2, T3, T4>() =>
+            [.. _entities.Values.Where(e =>
                 e.Has<T1>() &&
                 e.Has<T2>() &&
                 e.Has<T3>() &&
-                e.Has<T4>())
-                .ToList();
+                e.Has<T4>())];
 
         public IEnumerable<Entity> CreateGrid(int mapSize = 5, int blockedTilesAmt = 16)
         {
             var randBlockedTileIndices = Utils.GenerateRandomIntArray(blockedTilesAmt);
-            return HexGrid.GenerateHexCoordinates(mapSize)
+            return [.. HexGrid.GenerateHexCoordinates(mapSize)
                 .Select((coord, i) =>
                 {
                     var tile = CreateTile(coord, i);
@@ -115,7 +116,7 @@ namespace Game
                         tile.Add(new Traversable());
 
                     return tile;
-                }).ToList();
+                })];
         }
 
         public Entity CreateTile(Vector3I coord, int index = 0)
@@ -144,6 +145,7 @@ namespace Game
             player.Add(new Health(3));
             player.Add(new MoveRange(1));
             player.Add(new AttackRange(1));
+            player.Add(new RangeCircle());
 
             return player;
         }
@@ -161,6 +163,7 @@ namespace Game
             enemy.Add(new Health(1));
             enemy.Add(new MoveRange(1));
             enemy.Add(new AttackRange(1));
+            enemy.Add(new RangeCircle());
 
             return enemy;
         }

@@ -18,6 +18,12 @@ namespace Game.Components
     public readonly record struct CurrentTurn;
     public readonly record struct WaitingForAction;
     public readonly record struct SelectedTile;
+    public readonly record struct RangeCircle;
+    public readonly record struct RangeDiagonal;
+    public readonly record struct RangeExplosion;
+    public readonly record struct RangeHex;
+    public readonly record struct RangeNGon;
+
 
     public record struct Instance(Node3D Node) { public static implicit operator Node3D(Instance node) => node.Node; }
     public record struct Name(StringName Value) { public static implicit operator StringName(Name name) => name.Value; }
@@ -27,6 +33,7 @@ namespace Game.Components
     public record struct Damage(int Value) { public static implicit operator int(Damage damage) => damage.Value; }
     public record struct MoveRange(int Value) { public static implicit operator int(MoveRange range) => range.Value; }
     public record struct AttackRange(int Value) { public static implicit operator int(AttackRange range) => range.Value; }
+
 
     public record struct TurnOrder(int Value) : IComparable<TurnOrder>
     {
@@ -47,10 +54,4 @@ namespace Game.Components
         public static implicit operator (Vector3I, Vector3I)(Movement movement) =>
             (movement.From, movement.To);
     }
-
-    // public record struct Path(List<Vector3I> Value)
-    // {
-    //     public static implicit operator List<Vector3I>(Path path) =>
-    //        path.Value;
-    // }
 }

@@ -59,7 +59,7 @@ namespace Game
 
             var coordPath = path.Select(HexGrid.WorldToHex).ToList();
 
-            return maxRange > 0 ? coordPath.Take(maxRange + 1).ToList() : coordPath;
+            return maxRange > 0 ? [.. coordPath.Take(maxRange + 1)] : coordPath;
         }
 
         private void AddPoints()

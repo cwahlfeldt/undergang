@@ -14,25 +14,54 @@ namespace Game
 
         public override void Initialize()
         {
-            _debugText = new RichTextLabel { Position = new Vector2(10, 10), Size = new Vector2(300, 600) };
-            Entities.GetRootNode().AddChild(_debugText);
-            Events.Instance.UnitHover += OnUnitHover;
-            Events.Instance.UnitUnhover += OnUnitUnhover;
+            var panel = new PanelContainer
+            {
+                Position = new Vector2(10, 10),
+                Size = new Vector2(400, 630)
+            };
+
+            _debugText = new RichTextLabel
+            {
+                CustomMinimumSize = new Vector2(400, 630),
+                SizeFlagsHorizontal = Control.SizeFlags.Fill,
+                SizeFlagsVertical = Control.SizeFlags.Fill,
+                BbcodeEnabled = true,
+                ScrollFollowing = false,
+                Theme = new Theme()
+            };
+
+            // Apply custom styling
+            _debugText.AddThemeFontSizeOverride("normal_font_size", 13);
+            _debugText.AddThemeFontSizeOverride("bold_font_size", 14);
+            _debugText.AddThemeColorOverride("default_color", new Color(0.9f, 0.9f, 0.9f));
+
+            panel.AddChild(_debugText);
+            Entities.GetRootNode().AddChild(panel);
+            Events.Instance.UnitRightClick += OnUnitRightClick;
+            Events.Instance.TurnChanged += OnTurnChanged;
             _debugText.BbcodeEnabled = true;
             UpdateDebug();
         }
 
-        private void OnUnitHover(Entity unit)
+        private void OnTurnChanged(Entity _)
         {
-            GD.Print("yeah");
-            if (Input.IsMouseButtonPressed(MouseButton.Right))
+            UpdateDebug();
+        }
+
+        private void OnUnitRightClick(Entity unit)
+        {
+            GD.Print($"Right clicked unit {unit.Id}");
+            if (_selected.Contains(unit.Id))
             {
-                if (_selected.Contains(unit.Id))
-                    _selected.Remove(unit.Id);
-                else
-                    _selected.Add(unit.Id);
-                UpdateDebug();
+                _selected.Remove(unit.Id);
+                GD.Print($"Removed unit {unit.Id} from selection");
             }
+            else
+            {
+                _selected.Add(unit.Id);
+                GD.Print($"Added unit {unit.Id} to selection");
+            }
+            UpdateDebug();
         }
 
         private void OnUnitUnhover(Entity unit) { }
@@ -45,44 +74,82 @@ namespace Game
                 return;
             }
 
-            string text = "";
+            var table = new string[_selected.Count + 1][];
             var entities = _selected.Select(id => Entities.GetEntity(id)).Where(e => e != null).ToList();
+            var allComponentTypes = new HashSet<Type>();
 
+            // First pass: collect all component types
             foreach (var entity in entities)
             {
                 var components = entity.GetType()
                     .GetField("_components", BindingFlags.NonPublic | BindingFlags.Instance)
                     ?.GetValue(entity) as Dictionary<Type, object>;
 
-                text += $"[color=yellow]Entity {entity.Id}[/color]\n";
-
-                foreach (var (type, component) in components.OrderBy(c => c.Key.Name))
+                foreach (var (type, _) in components)
                 {
-                    if (type == typeof(Instance)) continue;
-
-                    text += $"\n[color=aqua]{type.Name}[/color]";
-                    foreach (var prop in type.GetProperties())
-                    {
-                        var value = prop.GetValue(component);
-                        var diff = entities.Count > 1 && entities.Any(e =>
-                        {
-                            if (e.Id == entity.Id) return false;
-                            var method = typeof(Entity).GetMethod("Get").MakeGenericMethod(type);
-                            var other = method.Invoke(e, null);
-                            return other == null || !Equals(prop.GetValue(other), value);
-                        });
-                        text += $"\n  [color={(diff ? "red" : "lime")}]{prop.Name}:[/color] {value}";
-                    }
+                    if (type != typeof(Instance))
+                        allComponentTypes.Add(type);
                 }
-                text += "\n\n";
             }
+
+            int columnCount = entities.Count + 1; // +1 for the component names column
+            string text = $"[table={columnCount}]\n";
+
+            // Add the header row spanning all columns
+            text += $"[cell][color=yellow][b]Components[/b][/color][/cell]";
+            foreach (var entity in entities)
+            {
+                var name = entity.Get<Name>().Value;
+                text += $"[cell ph=20][color=yellow][b]{name}[/b]\nEntity {entity.Id}[/color][/cell]";
+            }
+
+            // Component rows
+            foreach (var componentType in allComponentTypes.OrderBy(t => t.Name))
+            {
+                text += $"\n[cell][color=aqua]{componentType.Name}[/color][/cell]";
+
+                foreach (var entity in entities)
+                {
+                    var components = entity.GetType()
+                        .GetField("_components", BindingFlags.NonPublic | BindingFlags.Instance)
+                        ?.GetValue(entity) as Dictionary<Type, object>;
+
+                    text += "[cell]";
+                    if (components.TryGetValue(componentType, out var component))
+                    {
+                        bool first = true;
+                        foreach (var prop in componentType.GetProperties())
+                        {
+                            var value = prop.GetValue(component);
+                            var diff = entities.Count > 1 && entities.Any(e =>
+                            {
+                                if (e.Id == entity.Id) return false;
+                                var method = typeof(Entity).GetMethod("Get").MakeGenericMethod(componentType);
+                                var other = method.Invoke(e, null);
+                                return other == null || !Equals(prop.GetValue(other), value);
+                            });
+
+                            if (!first) text += "\n";
+                            text += value.ToString();
+                            first = false;
+                        }
+                    }
+                    else
+                    {
+                        text += "[color=#666666]null[/color]";
+                    }
+                    text += "[/cell]";
+                }
+            }
+
+            text += "[/table]";
             _debugText.Text = text;
         }
 
         public override void Cleanup()
         {
-            Events.Instance.UnitHover -= OnUnitHover;
-            Events.Instance.UnitUnhover -= OnUnitUnhover;
+            Events.Instance.UnitRightClick -= OnUnitRightClick;
+            Events.Instance.TurnChanged -= OnTurnChanged;
             _debugText?.QueueFree();
         }
     }

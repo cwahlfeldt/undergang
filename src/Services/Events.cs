@@ -17,6 +17,7 @@ namespace Game
         public event Action<Entity> UnitSelect;
         public event Action<Entity> UnitHover;
         public event Action<Entity> UnitUnhover;
+        public event Action<Entity> UnitRightClick;
         public event Action<Entity> OnUnitActionComplete;
         public event Action<IEnumerable<Entity>> GridReady;
         public event Action<int, Type, object> ComponentChanged;
@@ -91,6 +92,11 @@ namespace Game
         internal void OnUnitSelect(Entity entity)
         {
             UnitSelect?.Invoke(entity);
+        }
+
+        public void OnUnitRightClick(Entity entity)
+        {
+            UnitRightClick?.Invoke(entity);
         }
     }
 }

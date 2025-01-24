@@ -97,6 +97,16 @@ namespace Game
                     }
                 };
 
+                tileBody.InputEvent += (camera, @event, position, normal, shapeIdx) =>
+                {
+                    if (@event is InputEventMouseButton mouseEvent &&
+                        mouseEvent.ButtonIndex == MouseButton.Right &&
+                        mouseEvent.Pressed)
+                    {
+                        Events.OnUnitRightClick(entity);
+                    }
+                };
+
                 tileBody.MouseEntered += () =>
                 {
                     Events.OnUnitHover(entity);
