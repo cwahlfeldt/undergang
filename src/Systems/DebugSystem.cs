@@ -12,7 +12,7 @@ namespace Game
         public override void Initialize()
         {
             SetupDebugNodes();
-            TogglePathfindingDebug();
+            // TogglePathfindingDebug();
             Events.OnUnitActionComplete += OnUnitActionComplete;
         }
 

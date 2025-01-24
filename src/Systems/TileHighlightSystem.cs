@@ -40,12 +40,12 @@ namespace Game
 
         private void OnTileHover(Entity tile)
         {
-            if (tile != null &&
+            if (
                 tile != _selectedTile &&
                 !_highlightedTiles.Contains(tile))
             {
                 var player = Entities.Query<Player>().FirstOrDefault();
-                var path = PathFinder.FindPath(player.Get<Coordinate>(), tile.Get<Coordinate>(), -1);
+                var path = PathFinder.FindPath(player.Get<Coordinate>(), tile.Get<Coordinate>(), player.Get<MoveRange>());
 
                 if (path.Count > 0)
                 {

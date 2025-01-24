@@ -85,24 +85,24 @@ namespace Game
         public IEnumerable<Entity> GetTilesInRange(Vector3I coord, int range) =>
             GetTiles();
 
-        public List<Entity> Query<T1>() =>
-            [.. _entities.Values.Where(e =>
-                e.Has<T1>())];
-        public List<Entity> Query<T1, T2>() =>
-            [.. _entities.Values.Where(e =>
+        public IEnumerable<Entity> Query<T1>() =>
+            _entities.Values.Where(e =>
+                e.Has<T1>());
+        public IEnumerable<Entity> Query<T1, T2>() =>
+            _entities.Values.Where(e =>
                 e.Has<T1>() &&
-                e.Has<T2>())];
-        public List<Entity> Query<T1, T2, T3>() =>
-            [.. _entities.Values.Where(e =>
+                e.Has<T2>());
+        public IEnumerable<Entity> Query<T1, T2, T3>() =>
+            _entities.Values.Where(e =>
                 e.Has<T1>() &&
                 e.Has<T2>() &&
-                e.Has<T3>())];
-        public List<Entity> Query<T1, T2, T3, T4>() =>
-            [.. _entities.Values.Where(e =>
+                e.Has<T3>());
+        public IEnumerable<Entity> Query<T1, T2, T3, T4>() =>
+            _entities.Values.Where(e =>
                 e.Has<T1>() &&
                 e.Has<T2>() &&
                 e.Has<T3>() &&
-                e.Has<T4>())];
+                e.Has<T4>());
 
         public IEnumerable<Entity> CreateGrid(int mapSize = 5, int blockedTilesAmt = 16)
         {
@@ -145,7 +145,6 @@ namespace Game
             player.Add(new Health(3));
             player.Add(new MoveRange(1));
             player.Add(new AttackRange(1));
-            player.Add(new RangeCircle());
 
             return player;
         }
@@ -163,7 +162,6 @@ namespace Game
             enemy.Add(new Health(1));
             enemy.Add(new MoveRange(1));
             enemy.Add(new AttackRange(1));
-            enemy.Add(new RangeCircle());
 
             return enemy;
         }
