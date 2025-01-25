@@ -68,6 +68,16 @@ namespace Game
                     }
                 };
 
+                tileBody.InputEvent += (camera, @event, position, normal, shapeIdx) =>
+                {
+                    if (@event is InputEventMouseButton mouseEvent &&
+                        mouseEvent.ButtonIndex == MouseButton.Right &&
+                        mouseEvent.Pressed)
+                    {
+                        Events.OnUnitRightClick(entity);
+                    }
+                };
+
                 tileBody.MouseEntered += () =>
                 {
                     Events.OnTileHover(entity);
@@ -85,9 +95,9 @@ namespace Game
             if (!entity.Has<Unit>())
                 return;
 
-            if (entity.Get<Instance>().Node is Area3D tileBody)
+            if (entity.Get<Instance>().Node is Area3D unitBody)
             {
-                tileBody.InputEvent += (camera, @event, position, normal, shapeIdx) =>
+                unitBody.InputEvent += (camera, @event, position, normal, shapeIdx) =>
                 {
                     if (@event is InputEventMouseButton mouseEvent &&
                         mouseEvent.ButtonIndex == MouseButton.Left &&
@@ -97,7 +107,7 @@ namespace Game
                     }
                 };
 
-                tileBody.InputEvent += (camera, @event, position, normal, shapeIdx) =>
+                unitBody.InputEvent += (camera, @event, position, normal, shapeIdx) =>
                 {
                     if (@event is InputEventMouseButton mouseEvent &&
                         mouseEvent.ButtonIndex == MouseButton.Right &&
@@ -107,12 +117,12 @@ namespace Game
                     }
                 };
 
-                tileBody.MouseEntered += () =>
+                unitBody.MouseEntered += () =>
                 {
                     Events.OnUnitHover(entity);
                 };
 
-                tileBody.MouseExited += () =>
+                unitBody.MouseExited += () =>
                 {
                     Events.OnUnitUnhover(entity);
                 };

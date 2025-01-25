@@ -38,18 +38,6 @@ namespace Game
 
         public Entity GetEntity(int id) => _entities[id];
 
-        // public (UnitComponent unit, Vector3I coord, Entity entity) GetPlayer()
-        // {
-        //     var entity = Query<UnitComponent>().FirstOrDefault(e =>
-        //         e.Get<UnitComponent>().Type == UnitType.Player);
-
-        //     return entity != null ? (
-        //         unit: entity.Get<UnitComponent>(),
-        //         coord: entity.Get<TileComponent>().Coord,
-        //         entity
-        //     ) : default;
-        // }
-
         public Entity GetPlayer() =>
             Query<Player>().FirstOrDefault();
 
@@ -155,6 +143,7 @@ namespace Game
 
             enemy.Add(new Name("Enemy"));
             enemy.Add(new Enemy());
+            enemy.Add(new Grunt());
             enemy.Add(new Unit(unitType));
             enemy.Add(new Instance(new Node3D()));
             enemy.Add(new Coordinate(GetRandomTileEntity().Get<Coordinate>()));

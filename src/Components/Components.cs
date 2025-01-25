@@ -33,7 +33,7 @@ namespace Game.Components
     public record struct Damage(int Value) { public static implicit operator int(Damage damage) => damage.Value; }
     public record struct MoveRange(int Value) { public static implicit operator int(MoveRange range) => range.Value; }
     public record struct AttackRange(int Value) { public static implicit operator int(AttackRange range) => range.Value; }
-
+    public record struct AttackRangeTile(int Value) { public static implicit operator int(AttackRangeTile range) => range.Value; }
 
     public record struct TurnOrder(int Value) : IComparable<TurnOrder>
     {

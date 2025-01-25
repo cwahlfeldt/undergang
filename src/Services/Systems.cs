@@ -16,17 +16,20 @@ namespace Game
         {
             var entities = new Entities(rootNode);
             var pathfinder = new PathFinder(entities);
+            var materials = new Materials();
 
             _dependencies = new SystemDependencies(
                 entities,
                 pathfinder,
                 Events.Instance,
                 Tweener.Instance,
-                this
+                this,
+                materials
             );
 
             _sequential[typeof(Events)] = Events.Instance;
             _sequential[typeof(Entities)] = entities;
+            _sequential[typeof(Materials)] = entities;
             _sequential[typeof(PathFinder)] = pathfinder;
             _sequential[typeof(Tweener)] = Tweener.Instance;
         }

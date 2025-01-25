@@ -38,6 +38,7 @@ namespace Game
             panel.AddChild(_debugText);
             Entities.GetRootNode().AddChild(panel);
             Events.Instance.UnitRightClick += OnUnitRightClick;
+            Events.Instance.EntityRightClick += OnUnitRightClick;
             Events.Instance.TurnChanged += OnTurnChanged;
             _debugText.BbcodeEnabled = true;
             UpdateDebug();

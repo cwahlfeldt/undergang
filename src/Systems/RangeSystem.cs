@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
 using Game.Components;
-using System.Text.RegularExpressions;
 
 namespace Game
 {
@@ -18,26 +17,42 @@ namespace Game
                     if (e.Has<Grunt>() || e.Has<Player>())
                         e.Add(new RangeCircle());
                 });
+
+            UpdateRanges();
         }
 
         public override async Task Update()
         {
-            UpdateRanges(Entities.Query<Unit>().ToList());
+            UpdateRanges();
         }
 
-        private void UpdateRanges(List<Entity> units)
+        private void UpdateRanges()
         {
-            units.ForEach(u =>
-            {
-                if (u.Has<RangeCircle>())
+            // remove old
+            Entities.Query<AttackRangeTile>()
+                .ToList()
+                .ForEach(tile =>
+                    tile.Remove<AttackRangeTile>());
+
+            // assign the unit id to a tile for reference of its attack range
+            Entities.Query<Unit>()
+                .ToList()
+                .ForEach(u =>
                 {
-                    var tilesInRange = GetRangeCircle(u.Get<Coordinate>()).ToList();
-
-                }
-
-            });
+                    if (u.Has<RangeCircle>())
+                    {
+                        var coordsInRange = GetRangeCircle(u.Get<Coordinate>()).ToList();
+                        coordsInRange.ForEach(coord =>
+                        {
+                            var tile = Entities.GetAt(coord);
+                            if (tile != null && tile.Has<Traversable>())
+                                tile.Add(new AttackRangeTile(u.Id));
+                        });
+                    }
+                });
         }
 
+        // Range Functions
         public static IEnumerable<Vector3I> GetRangeCircle(Vector3I center)
         {
             return HexGrid.Directions.Values.Select(dir => center + dir);
